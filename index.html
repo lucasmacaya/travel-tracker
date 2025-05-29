@@ -168,6 +168,28 @@
             display: block;
         }
 
+        /* Upload Area */
+        #uploadArea {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #ecf0f1;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #uploadArea:hover {
+            background: #d5dbdb;
+            border-color: #2980b9;
+        }
+
+        #uploadArea.dragover {
+            background: #bdc3c7;
+            border-color: #2980b9;
+        }
+
         /* Original styles continue... */
         h1 {
             color: #2c3e50;
@@ -493,6 +515,12 @@
             </div>
 
             <h1>✈️ Travel Tracker 2025</h1>
+
+            <!-- Excel Upload Area -->
+            <div id="uploadArea">
+                <p>📁 Drag and drop your Excel file here or click to upload</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+            </div>
 
             <div class="controls">
                 <div class="control-group">
@@ -960,6 +988,118 @@
             XLSX.writeFile(wb, "Travel_Tracker_2025.xlsx");
         }
 
+        // Excel Import Functions
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        async function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    showSyncStatus('saving', 'Importing Excel file...');
+                    
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    // Parse the Excel data
+                    let importedTrips = [];
+                    for (let i = 3; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (row[1]) { // If there's an event name
+                            const tripData = {
+                                priority: parsePriority(row[0]),
+                                event: row[1] || 'Imported Event',
+                                route: row[5] || row[2] || 'TBD',
+                                start_date: parseExcelDate(row[3]) || new Date().toISOString().split('T')[0],
+                                end_date: parseExcelDate(row[4]) || new Date().toISOString().split('T')[0],
+                                status: parseStatus(row[6]),
+                                airline: row[8] || null,
+                                booking: row[7] || null,
+                                notes: row[13] || null,
+                                created_by: currentUser.email,
+                                user_id: currentUser.id
+                            };
+                            importedTrips.push(tripData);
+                        }
+                    }
+                    
+                    if (importedTrips.length > 0) {
+                        // Insert all trips to database
+                        const { error } = await supabaseClient
+                            .from('trips')
+                            .insert(importedTrips);
+                            
+                        if (error) throw error;
+                        
+                        await loadTrips();
+                        showSyncStatus('saved', `Imported ${importedTrips.length} trips!`);
+                    } else {
+                        showSyncStatus('error', 'No valid trips found in Excel file');
+                    }
+                } catch (err) {
+                    console.error('Import error:', err);
+                    showSyncStatus('error', 'Error importing file');
+                    alert('Error reading file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parsePriority(val) {
+            if (!val) return 'P3';
+            const str = String(val).toUpperCase();
+            if (str.includes('P1')) return 'P1';
+            if (str.includes('P2')) return 'P2';
+            if (str.includes('P3')) return 'P3';
+            if (str.includes('X')) return 'P1';
+            return 'P3';
+        }
+
+        function parseStatus(val) {
+            if (!val) return 'PENDING';
+            const str = String(val).toUpperCase();
+            if (str.includes('LISTO') || str.includes('SI') || str.includes('CONFIRMED')) return 'CONFIRMED';
+            if (str.includes('CANCEL')) return 'CANCELLED';
+            return 'PENDING';
+        }
+
+        function parseExcelDate(val) {
+            if (!val) return null;
+            if (typeof val === 'string') {
+                if (val.includes('T')) {
+                    return val.split('T')[0];
+                }
+                // Try parsing as regular date
+                const date = new Date(val);
+                if (!isNaN(date)) {
+                    return date.toISOString().split('T')[0];
+                }
+            }
+            // Handle Excel serial dates
+            if (typeof val === 'number') {
+                const date = new Date((val - 25569) * 86400 * 1000);
+                return date.toISOString().split('T')[0];
+            }
+            return null;
+        }
+
         // Modal close on outside click
         window.onclick = function(event) {
             const modal = document.getElementById('tripModal');
@@ -988,6 +1128,21 @@
             document.getElementById('filterMonth').addEventListener('input', updateTable);
             document.getElementById('resetFilters').addEventListener('click', resetFilters);
             document.getElementById('exportData').addEventListener('click', exportToExcel);
+
+            // File upload event listeners
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            uploadArea.addEventListener('drop', handleFileDrop);
+            fileInput.addEventListener('change', handleFileSelect);
 
             // Listen for auth state changes
             supabaseClient.auth.onAuthStateChange((event, session) => {
