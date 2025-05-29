@@ -764,7 +764,7 @@
         </div>
         <h2 id="authTitle">Login to CIFO Travel Tracker</h2>
         <div id="authMessage"></div>
-        <form id="authForm" class="auth-form">
+        <form id="authForm" class="auth-form" onsubmit="handleAuth(event); return false;">
             <input type="email" id="authEmail" placeholder="Email" required>
             <input type="password" id="authPassword" placeholder="Password" required>
             <button type="submit" id="authSubmit">Login</button>
@@ -1086,13 +1086,20 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase
+        // Initialize Supabase immediately
         const SUPABASE_URL = 'https://xpdoyentcioxvotsvieu.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwZG95ZW50Y2lveHZvdHN2aWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NDY0MjIsImV4cCI6MjA2NDEyMjQyMn0.1n8c7fQ2muDRfOEHH0_6Uj0TQCqb6rHke7TiIed2m5U';
         
-        const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabaseClient;
+        if (typeof window.supabase !== 'undefined') {
+            const { createClient } = window.supabase;
+            supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase client initialized');
+        } else {
+            console.error('Supabase library not loaded!');
+        }
 
         // Global variables
         let currentUser = null;
@@ -1146,19 +1153,51 @@
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
             const authMessage = document.getElementById('authMessage');
+            const submitButton = document.getElementById('authSubmit');
+
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = isSignUp ? 'Creating Account...' : 'Logging in...';
 
             try {
                 let result;
                 if (isSignUp) {
                     result = await supabaseClient.auth.signUp({ email, password });
                     if (result.error) throw result.error;
-                    authMessage.innerHTML = '<div class="success-message">Account created! Please check your email to verify.</div>';
+                    
+                    if (result.data.user && result.data.user.identities && result.data.user.identities.length === 0) {
+                        authMessage.innerHTML = '<div class="error-message">This email is already registered. Please login instead.</div>';
+                    } else {
+                        authMessage.innerHTML = '<div class="success-message">Account created! Please check your email to verify your account.</div>';
+                        // Don't clear the form on signup
+                    }
                 } else {
                     result = await supabaseClient.auth.signInWithPassword({ email, password });
                     if (result.error) throw result.error;
+                    
+                    if (result.data.user) {
+                        authMessage.innerHTML = '<div class="success-message">Login successful!</div>';
+                        // User will be redirected automatically by onAuthStateChange
+                    }
                 }
             } catch (error) {
-                authMessage.innerHTML = `<div class="error-message">${error.message}</div>`;
+                console.error('Auth error:', error);
+                
+                // Provide more helpful error messages
+                let errorMessage = error.message;
+                if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please verify your email before logging in. Check your inbox for the verification link.';
+                } else if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please try again.';
+                } else if (error.message.includes('User not found')) {
+                    errorMessage = 'No account found with this email. Please sign up first.';
+                }
+                
+                authMessage.innerHTML = `<div class="error-message">${errorMessage}</div>`;
+            } finally {
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.textContent = isSignUp ? 'Sign Up' : 'Login';
             }
         }
 
