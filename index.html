@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Tracker 2025 - Multi-User Cloud Version</title>
+    <title>CIFO Travel Tracker 2025</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        :root {
+            --cifo-orange: #FF6B35;
+            --cifo-black: #000000;
+            --cifo-gray: #333333;
+            --cifo-light-gray: #f5f5f5;
         }
 
         body {
@@ -25,6 +32,33 @@
             padding: 20px;
         }
 
+        /* CIFO Header */
+        .cifo-header {
+            background: var(--cifo-black);
+            color: white;
+            padding: 15px 0;
+            margin: -20px -20px 20px -20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cifo-logo {
+            background: var(--cifo-orange);
+            color: white;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 24px;
+            margin-left: 20px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-right: 20px;
+        }
+
         /* Auth Container */
         .auth-container {
             max-width: 400px;
@@ -38,7 +72,7 @@
         .auth-container h2 {
             text-align: center;
             margin-bottom: 30px;
-            color: #2c3e50;
+            color: var(--cifo-black);
         }
 
         .auth-form {
@@ -56,7 +90,7 @@
 
         .auth-form button {
             padding: 12px;
-            background: #3498db;
+            background: var(--cifo-orange);
             color: white;
             border: none;
             border-radius: 5px;
@@ -66,7 +100,7 @@
         }
 
         .auth-form button:hover {
-            background: #2980b9;
+            background: #e55a2b;
         }
 
         .auth-toggle {
@@ -76,7 +110,7 @@
         }
 
         .auth-toggle a {
-            color: #3498db;
+            color: var(--cifo-orange);
             text-decoration: none;
             font-weight: 600;
         }
@@ -100,22 +134,13 @@
         }
 
         /* User Info Bar */
-        .user-info {
-            background: #2c3e50;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: -20px -20px 20px -20px;
-        }
-
         .user-email {
             font-size: 14px;
+            color: white;
         }
 
         .logout-btn {
-            background: #e74c3c;
+            background: var(--cifo-orange);
             color: white;
             border: none;
             padding: 6px 15px;
@@ -125,7 +150,7 @@
         }
 
         .logout-btn:hover {
-            background: #c0392b;
+            background: #e55a2b;
         }
 
         /* Sync Status */
@@ -170,33 +195,60 @@
 
         /* Upload Area */
         #uploadArea {
-            border: 2px dashed #3498db;
+            border: 2px dashed var(--cifo-orange);
             border-radius: 10px;
             padding: 30px;
             text-align: center;
-            background: #ecf0f1;
+            background: #fef5f1;
             margin-bottom: 20px;
             cursor: pointer;
             transition: all 0.3s;
         }
 
         #uploadArea:hover {
-            background: #d5dbdb;
-            border-color: #2980b9;
+            background: #fde8df;
+            border-color: #e55a2b;
         }
 
-        #uploadArea.dragover {
-            background: #bdc3c7;
-            border-color: #2980b9;
-        }
-
-        /* Original styles continue... */
+        /* Title */
         h1 {
-            color: #2c3e50;
+            color: var(--cifo-black);
             margin-bottom: 30px;
             font-size: 2.5em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
+        .title-advisor {
+            font-size: 0.5em;
+            color: var(--cifo-gray);
+            font-weight: normal;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--cifo-orange);
+            background: white;
+            color: var(--cifo-orange);
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .view-btn.active {
+            background: var(--cifo-orange);
+            color: white;
+        }
+
+        /* Controls */
         .controls {
             background: white;
             padding: 20px;
@@ -231,12 +283,12 @@
 
         input:focus, select:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: var(--cifo-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
         }
 
         button {
-            background: #3498db;
+            background: var(--cifo-orange);
             color: white;
             border: none;
             cursor: pointer;
@@ -247,7 +299,7 @@
         }
 
         button:hover {
-            background: #2980b9;
+            background: #e55a2b;
             transform: translateY(-1px);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
@@ -268,6 +320,30 @@
             background: #229954;
         }
 
+        /* Filter Pills */
+        .filter-pills {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-pill {
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .filter-pill.active {
+            background: var(--cifo-orange);
+            color: white;
+            border-color: var(--cifo-orange);
+        }
+
+        /* Stats */
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -281,12 +357,13 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             text-align: center;
+            border-top: 3px solid var(--cifo-orange);
         }
 
         .stat-number {
             font-size: 2em;
             font-weight: bold;
-            color: #3498db;
+            color: var(--cifo-orange);
         }
 
         .stat-label {
@@ -294,6 +371,7 @@
             margin-top: 5px;
         }
 
+        /* Table */
         .table-container {
             background: white;
             border-radius: 10px;
@@ -307,7 +385,7 @@
         }
 
         th {
-            background: #34495e;
+            background: var(--cifo-black);
             color: white;
             padding: 15px;
             text-align: left;
@@ -326,6 +404,51 @@
             background: #f8f9fa;
         }
 
+        /* Expandable Row */
+        .expandable-row {
+            cursor: pointer;
+        }
+
+        .expandable-row:hover {
+            background: #fef5f1;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .expanded-content {
+            display: none;
+            background: #fef5f1;
+            padding: 20px;
+            border-left: 3px solid var(--cifo-orange);
+        }
+
+        .expanded-content.show {
+            display: block;
+        }
+
+        .traveler-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .traveler-card {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        /* Priority and Status Badges */
         .priority-high {
             background: #e74c3c;
             color: white;
@@ -359,7 +482,7 @@
         }
 
         .status-pending {
-            background: #e67e22;
+            background: var(--cifo-orange);
             color: white;
             padding: 3px 8px;
             border-radius: 3px;
@@ -374,20 +497,13 @@
             font-size: 0.8em;
         }
 
-        .route {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .date {
-            white-space: nowrap;
-        }
-
-        .created-by {
+        .trip-type {
             font-size: 0.8em;
-            color: #7f8c8d;
+            color: #666;
+            font-style: italic;
         }
 
+        /* Actions */
         .actions {
             display: flex;
             gap: 5px;
@@ -397,16 +513,23 @@
             padding: 5px 10px;
             font-size: 0.8em;
             border-radius: 3px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .action-btn:hover {
+            opacity: 1;
         }
 
         .edit-btn {
-            background: #3498db;
+            background: var(--cifo-orange);
         }
 
         .delete-btn {
             background: #e74c3c;
         }
 
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -424,7 +547,7 @@
             background: white;
             padding: 30px;
             border-radius: 10px;
-            max-width: 500px;
+            max-width: 600px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
@@ -433,16 +556,29 @@
 
         .modal h2 {
             margin-bottom: 20px;
-            color: #2c3e50;
+            color: var(--cifo-black);
+            border-bottom: 2px solid var(--cifo-orange);
+            padding-bottom: 10px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
         .form-group {
             margin-bottom: 15px;
         }
 
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 5px;
+            color: var(--cifo-gray);
         }
 
         .form-group input,
@@ -451,10 +587,81 @@
             width: 100%;
         }
 
+        /* Traveler Selection */
+        .traveler-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .traveler-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .traveler-checkbox:hover {
+            background: #e9ecef;
+        }
+
+        .traveler-checkbox input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        /* Airport Suggestions */
+        .airport-input-wrapper {
+            position: relative;
+        }
+
+        .airport-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .airport-suggestions.show {
+            display: block;
+        }
+
+        .airport-suggestion {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .airport-suggestion:hover {
+            background: #fef5f1;
+        }
+
+        .airport-code {
+            font-weight: bold;
+            color: var(--cifo-orange);
+        }
+
+        .airport-name {
+            font-size: 0.9em;
+            color: #666;
+        }
+
         .form-actions {
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            justify-content: flex-end;
         }
 
         .close-modal {
@@ -466,6 +673,56 @@
             font-size: 1.5em;
             cursor: pointer;
             color: #7f8c8d;
+        }
+
+        /* Calendar View */
+        .calendar-view {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+            font-size: 0.9em;
+            position: relative;
+            min-height: 80px;
+        }
+
+        .calendar-day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .calendar-trip {
+            background: var(--cifo-orange);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            margin-bottom: 2px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         @media (max-width: 768px) {
@@ -480,6 +737,16 @@
             table {
                 min-width: 1000px;
             }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .cifo-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -492,7 +759,10 @@
 
     <!-- Login/Signup Form -->
     <div id="authContainer" class="auth-container">
-        <h2 id="authTitle">Login to Travel Tracker</h2>
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background: var(--cifo-orange); color: white; padding: 10px 20px; font-weight: bold; font-size: 24px; display: inline-block;">CIFO</div>
+        </div>
+        <h2 id="authTitle">Login to CIFO Travel Tracker</h2>
         <div id="authMessage"></div>
         <form id="authForm" class="auth-form">
             <input type="email" id="authEmail" placeholder="Email" required>
@@ -508,18 +778,36 @@
     <!-- Main App -->
     <div id="app">
         <div class="container">
-            <!-- User Info Bar -->
-            <div class="user-info">
-                <span class="user-email">Logged in as: <strong id="userEmail"></strong></span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+            <!-- CIFO Header -->
+            <div class="cifo-header">
+                <div class="cifo-logo">CIFO</div>
+                <div class="header-right">
+                    <span class="user-email">Logged in as: <strong id="userEmail"></strong></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
             </div>
 
-            <h1>✈️ Travel Tracker 2025</h1>
+            <h1>✈️ Travel Tracker 2025 <span class="title-advisor">Claudia Trip Advisor</span></h1>
+
+            <!-- View Toggle -->
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="toggleView('table')">Table View</button>
+                <button class="view-btn" onclick="toggleView('calendar')">Calendar View</button>
+            </div>
 
             <!-- Excel Upload Area -->
             <div id="uploadArea">
                 <p>📁 Drag and drop your Excel file here or click to upload</p>
                 <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="filter-pills">
+                <div class="filter-pill active" onclick="setDateFilter('all')">All</div>
+                <div class="filter-pill" onclick="setDateFilter('year')">Year</div>
+                <div class="filter-pill" onclick="setDateFilter('month')">Month</div>
+                <div class="filter-pill" onclick="setDateFilter('week')">Week</div>
+                <div class="filter-pill" onclick="setDateFilter('day')">Day</div>
             </div>
 
             <div class="controls">
@@ -542,10 +830,27 @@
                         <option value="P3">P3 - Low</option>
                     </select>
                 </div>
-                
+
                 <div class="control-group">
-                    <label for="filterMonth">Filter by Month</label>
-                    <input type="month" id="filterMonth">
+                    <label for="filterTraveler">Filter by Traveler</label>
+                    <select id="filterTraveler">
+                        <option value="">All Travelers</option>
+                        <option value="Claudia">Claudia</option>
+                        <option value="Andres">Andres</option>
+                        <option value="Lucas">Lucas</option>
+                        <option value="Ale">Ale</option>
+                        <option value="Cris">Cris</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="filterType">Trip Type</label>
+                    <select id="filterType">
+                        <option value="">All Types</option>
+                        <option value="Business">Business</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Family">Family</option>
+                    </select>
                 </div>
                 
                 <button id="addTrip" class="btn-primary">
@@ -575,25 +880,25 @@
                     <div class="stat-label">Pending</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="upcomingTrips">0</div>
-                    <div class="stat-label">Next 30 Days</div>
+                    <div class="stat-number" id="totalCost">$0</div>
+                    <div class="stat-label">Total Cost</div>
                 </div>
             </div>
 
-            <div class="table-container">
+            <!-- Table View -->
+            <div id="tableView" class="table-container">
                 <table id="tripsTable">
                     <thead>
                         <tr>
                             <th>Priority</th>
                             <th>Event</th>
                             <th>Route</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
+                            <th>Depart</th>
+                            <th>Arrive</th>
                             <th>Status</th>
-                            <th>Airline</th>
-                            <th>Booking</th>
-                            <th>Notes</th>
-                            <th>Created By</th>
+                            <th>Type</th>
+                            <th>Cost</th>
+                            <th>Travelers</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -601,6 +906,18 @@
                         <!-- Trips will be populated here -->
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarView" class="calendar-view">
+                <div class="calendar-header">
+                    <button onclick="changeMonth(-1)">←</button>
+                    <h2 id="calendarMonth"></h2>
+                    <button onclick="changeMonth(1)">→</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be populated here -->
+                </div>
             </div>
         </div>
     </div>
@@ -611,57 +928,153 @@
             <button class="close-modal" onclick="closeModal()">&times;</button>
             <h2 id="modalTitle">Add New Trip</h2>
             <form id="tripForm" onsubmit="saveTrip(event)">
-                <div class="form-group">
-                    <label for="tripPriority">Priority</label>
-                    <select id="tripPriority" required>
-                        <option value="P1">P1 - High</option>
-                        <option value="P2">P2 - Medium</option>
-                        <option value="P3">P3 - Low</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripPriority">Priority</label>
+                        <select id="tripPriority" required>
+                            <option value="P1">P1 - High</option>
+                            <option value="P2">P2 - Medium</option>
+                            <option value="P3">P3 - Low</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripType">Trip Type</label>
+                        <select id="tripType" required>
+                            <option value="Business">Business</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Family">Family</option>
+                        </select>
+                    </div>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group full-width">
                     <label for="tripEvent">Event</label>
                     <input type="text" id="tripEvent" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="tripRoute">Route (FROM, TO)</label>
-                    <input type="text" id="tripRoute" placeholder="e.g., NEW YORK, MIAMI" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripFrom">From (City or Airport)</label>
+                        <div class="airport-input-wrapper">
+                            <input type="text" id="tripFrom" placeholder="e.g., New York or JFK" required>
+                            <div class="airport-suggestions" id="fromSuggestions"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripTo">To (City or Airport)</label>
+                        <div class="airport-input-wrapper">
+                            <input type="text" id="tripTo" placeholder="e.g., Madrid or MAD" required>
+                            <div class="airport-suggestions" id="toSuggestions"></div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="tripStartDate">Start Date</label>
-                    <input type="date" id="tripStartDate" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripStartDate">Departure Date</label>
+                        <input type="date" id="tripStartDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripStartTime">Departure Time</label>
+                        <input type="time" id="tripStartTime">
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="tripEndDate">End Date</label>
-                    <input type="date" id="tripEndDate" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripEndDate">Arrival Date</label>
+                        <input type="date" id="tripEndDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripEndTime">Arrival Time</label>
+                        <input type="time" id="tripEndTime">
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="tripStatus">Status</label>
-                    <select id="tripStatus" required>
-                        <option value="PENDING">Pending</option>
-                        <option value="CONFIRMED">Confirmed</option>
-                        <option value="CANCELLED">Cancelled</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripStatus">Status</label>
+                        <select id="tripStatus" required>
+                            <option value="PENDING">Pending</option>
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripBookingType">Booking Type</label>
+                        <select id="tripBookingType">
+                            <option value="">Select...</option>
+                            <option value="Agency">Agency</option>
+                            <option value="Direct">Direct</option>
+                            <option value="Private">Private</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <input type="text" id="tripBookingTypeOther" placeholder="Specify other..." style="display: none; margin-top: 5px;">
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="tripAirline">Airline</label>
-                    <input type="text" id="tripAirline">
+                <div class="form-group full-width">
+                    <label>Travelers</label>
+                    <div class="traveler-selection">
+                        <label class="traveler-checkbox">
+                            <input type="checkbox" name="travelers" value="Claudia"> Claudia
+                        </label>
+                        <label class="traveler-checkbox">
+                            <input type="checkbox" name="travelers" value="Andres"> Andres
+                        </label>
+                        <label class="traveler-checkbox">
+                            <input type="checkbox" name="travelers" value="Lucas"> Lucas
+                        </label>
+                        <label class="traveler-checkbox">
+                            <input type="checkbox" name="travelers" value="Ale"> Ale
+                        </label>
+                        <label class="traveler-checkbox">
+                            <input type="checkbox" name="travelers" value="Cris"> Cris
+                        </label>
+                        <label class="traveler-checkbox">
+                            <input type="checkbox" name="travelers" value="Other"> Other
+                        </label>
+                    </div>
+                    <input type="text" id="otherTravelers" placeholder="Enter other travelers (comma separated)" style="display: none; margin-top: 10px;">
                 </div>
                 
-                <div class="form-group">
-                    <label for="tripBooking">Booking Type</label>
-                    <input type="text" id="tripBooking" placeholder="e.g., Direct, Agency">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripAirline">Airline</label>
+                        <input type="text" id="tripAirline">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripReservationCode">Reservation Code</label>
+                        <input type="text" id="tripReservationCode">
+                    </div>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tripCost">Cost</label>
+                        <input type="number" id="tripCost" step="0.01" placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tripPurchaseLink">Purchase Link</label>
+                        <input type="url" id="tripPurchaseLink" placeholder="https://...">
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
                     <label for="tripNotes">Notes</label>
                     <textarea id="tripNotes" rows="3"></textarea>
+                </div>
+                
+                <div id="travelerDetails" style="display: none;">
+                    <h3 style="margin-top: 20px; margin-bottom: 10px; color: var(--cifo-orange);">Traveler Details</h3>
+                    <div id="travelerDetailsList"></div>
                 </div>
                 
                 <div class="form-actions">
@@ -686,6 +1099,46 @@
         let trips = [];
         let editingTrip = null;
         let isSignUp = false;
+        let currentView = 'table';
+        let dateFilter = 'all';
+        let currentMonth = new Date();
+
+        // Airport data
+        const airports = {
+            'new york': [
+                { code: 'JFK', name: 'John F. Kennedy International' },
+                { code: 'LGA', name: 'LaGuardia' },
+                { code: 'EWR', name: 'Newark Liberty International' }
+            ],
+            'london': [
+                { code: 'LHR', name: 'Heathrow' },
+                { code: 'LGW', name: 'Gatwick' },
+                { code: 'STN', name: 'Stansted' },
+                { code: 'LCY', name: 'London City' },
+                { code: 'LTN', name: 'Luton' }
+            ],
+            'paris': [
+                { code: 'CDG', name: 'Charles de Gaulle' },
+                { code: 'ORY', name: 'Orly' },
+                { code: 'BVA', name: 'Beauvais' }
+            ],
+            'madrid': [
+                { code: 'MAD', name: 'Adolfo Suárez Madrid-Barajas' }
+            ],
+            'miami': [
+                { code: 'MIA', name: 'Miami International' },
+                { code: 'FLL', name: 'Fort Lauderdale-Hollywood' },
+                { code: 'PBI', name: 'Palm Beach International' }
+            ],
+            'caracas': [
+                { code: 'CCS', name: 'Simón Bolívar International' }
+            ],
+            'los angeles': [
+                { code: 'LAX', name: 'Los Angeles International' },
+                { code: 'BUR', name: 'Hollywood Burbank' },
+                { code: 'LGB', name: 'Long Beach' }
+            ]
+        };
 
         // Auth functions
         async function handleAuth(e) {
@@ -712,7 +1165,7 @@
         function toggleAuthMode(e) {
             e.preventDefault();
             isSignUp = !isSignUp;
-            document.getElementById('authTitle').textContent = isSignUp ? 'Sign Up for Travel Tracker' : 'Login to Travel Tracker';
+            document.getElementById('authTitle').textContent = isSignUp ? 'Sign Up for CIFO Travel Tracker' : 'Login to CIFO Travel Tracker';
             document.getElementById('authSubmit').textContent = isSignUp ? 'Sign Up' : 'Login';
             document.getElementById('authToggleText').textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
             document.getElementById('authToggleLink').textContent = isSignUp ? 'Login' : 'Sign up';
@@ -734,6 +1187,30 @@
             document.getElementById('authContainer').style.display = 'block';
             document.getElementById('app').classList.remove('authenticated');
             trips = [];
+        }
+
+        // View toggle
+        function toggleView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (view === 'table') {
+                document.getElementById('tableView').style.display = 'block';
+                document.getElementById('calendarView').style.display = 'none';
+            } else {
+                document.getElementById('tableView').style.display = 'none';
+                document.getElementById('calendarView').style.display = 'block';
+                renderCalendar();
+            }
+        }
+
+        // Date filter
+        function setDateFilter(filter) {
+            dateFilter = filter;
+            document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+            event.target.classList.add('active');
+            updateTable();
         }
 
         // Sync status functions
@@ -783,15 +1260,59 @@
         async function saveTrip(e) {
             e.preventDefault();
             
+            // Get travelers
+            const selectedTravelers = Array.from(document.querySelectorAll('input[name="travelers"]:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedTravelers.includes('Other')) {
+                const otherTravelers = document.getElementById('otherTravelers').value;
+                if (otherTravelers) {
+                    selectedTravelers.push(...otherTravelers.split(',').map(t => t.trim()));
+                }
+                selectedTravelers.splice(selectedTravelers.indexOf('Other'), 1);
+            }
+
+            // Get booking type
+            let bookingType = document.getElementById('tripBookingType').value;
+            if (bookingType === 'Other') {
+                bookingType = document.getElementById('tripBookingTypeOther').value;
+            }
+
+            // Build route
+            const fromCity = document.getElementById('tripFrom').value;
+            const toCity = document.getElementById('tripTo').value;
+            const route = `${fromCity}, ${toCity}`;
+
+            // Get traveler details
+            const travelerDetails = {};
+            selectedTravelers.forEach(traveler => {
+                const confInput = document.getElementById(`conf_${traveler}`);
+                const seatInput = document.getElementById(`seat_${traveler}`);
+                if (confInput || seatInput) {
+                    travelerDetails[traveler] = {
+                        confirmation: confInput?.value || '',
+                        seat: seatInput?.value || ''
+                    };
+                }
+            });
+
             const tripData = {
                 priority: document.getElementById('tripPriority').value,
                 event: document.getElementById('tripEvent').value,
-                route: document.getElementById('tripRoute').value,
+                route: route,
                 start_date: document.getElementById('tripStartDate').value,
                 end_date: document.getElementById('tripEndDate').value,
+                start_time: document.getElementById('tripStartTime').value || null,
+                end_time: document.getElementById('tripEndTime').value || null,
                 status: document.getElementById('tripStatus').value,
+                trip_type: document.getElementById('tripType').value,
                 airline: document.getElementById('tripAirline').value || null,
-                booking: document.getElementById('tripBooking').value || null,
+                booking: bookingType || null,
+                reservation_code: document.getElementById('tripReservationCode').value || null,
+                cost: parseFloat(document.getElementById('tripCost').value) || null,
+                purchase_link: document.getElementById('tripPurchaseLink').value || null,
+                travelers: selectedTravelers,
+                traveler_details: travelerDetails,
                 notes: document.getElementById('tripNotes').value || null,
                 created_by: currentUser.email,
                 user_id: currentUser.id
@@ -801,7 +1322,6 @@
                 showSyncStatus('saving', 'Saving trip...');
                 
                 if (editingTrip) {
-                    // Update existing trip
                     const { error } = await supabaseClient
                         .from('trips')
                         .update(tripData)
@@ -809,7 +1329,6 @@
                     
                     if (error) throw error;
                 } else {
-                    // Insert new trip
                     const { error } = await supabaseClient
                         .from('trips')
                         .insert([tripData]);
@@ -854,43 +1373,134 @@
             const tbody = document.getElementById('tripsBody');
             const statusFilter = document.getElementById('filterStatus').value;
             const priorityFilter = document.getElementById('filterPriority').value;
-            const monthFilter = document.getElementById('filterMonth').value;
+            const travelerFilter = document.getElementById('filterTraveler').value;
+            const typeFilter = document.getElementById('filterType').value;
             
-            // Filter trips
+            // Apply date filter
+            const now = new Date();
             let filteredTrips = trips.filter(trip => {
+                const tripDate = new Date(trip.start_date);
+                
+                switch(dateFilter) {
+                    case 'year':
+                        return tripDate.getFullYear() === now.getFullYear();
+                    case 'month':
+                        return tripDate.getFullYear() === now.getFullYear() && 
+                               tripDate.getMonth() === now.getMonth();
+                    case 'week':
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        const weekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                        return tripDate >= weekAgo && tripDate <= weekAhead;
+                    case 'day':
+                        return tripDate.toDateString() === now.toDateString();
+                    default:
+                        return true;
+                }
+            });
+            
+            // Apply other filters
+            filteredTrips = filteredTrips.filter(trip => {
                 if (statusFilter && trip.status !== statusFilter) return false;
                 if (priorityFilter && trip.priority !== priorityFilter) return false;
-                if (monthFilter) {
-                    const tripMonth = trip.start_date.substring(0, 7);
-                    if (tripMonth !== monthFilter) return false;
-                }
+                if (typeFilter && trip.trip_type !== typeFilter) return false;
+                if (travelerFilter && !trip.travelers?.includes(travelerFilter)) return false;
                 return true;
             });
             
             // Render table
             tbody.innerHTML = filteredTrips.map(trip => {
                 const canEdit = trip.user_id === currentUser?.id;
+                const travelers = trip.travelers || [];
+                const travelerDisplay = travelers.length > 2 
+                    ? `${travelers.slice(0, 2).join(', ')} +${travelers.length - 2}`
+                    : travelers.join(', ');
+                
                 return `
-                    <tr>
+                    <tr class="expandable-row" onclick="toggleExpandedRow('${trip.id}')">
                         <td><span class="priority-${trip.priority === 'P1' ? 'high' : trip.priority === 'P2' ? 'medium' : 'low'}">${trip.priority}</span></td>
-                        <td>${trip.event}</td>
-                        <td class="route">${trip.route}</td>
-                        <td class="date">${formatDate(trip.start_date)}</td>
-                        <td class="date">${formatDate(trip.end_date)}</td>
+                        <td>
+                            <span class="expand-icon" id="expand-${trip.id}">▶</span>
+                            ${trip.event}
+                            ${trip.trip_type ? `<span class="trip-type">(${trip.trip_type})</span>` : ''}
+                        </td>
+                        <td>${trip.route}</td>
+                        <td class="date">${formatDateTime(trip.start_date, trip.start_time)}</td>
+                        <td class="date">${formatDateTime(trip.end_date, trip.end_time)}</td>
                         <td><span class="status-${trip.status.toLowerCase()}">${trip.status}</span></td>
-                        <td>${trip.airline || '-'}</td>
-                        <td>${trip.booking || '-'}</td>
-                        <td>${trip.notes || '-'}</td>
-                        <td class="created-by">${trip.created_by}</td>
-                        <td class="actions">
+                        <td>${trip.trip_type || '-'}</td>
+                        <td>${trip.cost ? `$${trip.cost.toFixed(2)}` : '-'}</td>
+                        <td>${travelerDisplay || '-'}</td>
+                        <td class="actions" onclick="event.stopPropagation()">
                             ${canEdit ? `
                                 <button class="action-btn edit-btn" onclick="editTrip('${trip.id}')">Edit</button>
                                 <button class="action-btn delete-btn" onclick="deleteTrip('${trip.id}')">Delete</button>
                             ` : '<span style="color: #999;">-</span>'}
                         </td>
                     </tr>
+                    <tr id="expanded-${trip.id}" style="display: none;">
+                        <td colspan="10">
+                            <div class="expanded-content">
+                                ${renderExpandedContent(trip)}
+                            </div>
+                        </td>
+                    </tr>
                 `;
             }).join('');
+
+            updateStats();
+        }
+
+        function renderExpandedContent(trip) {
+            let content = '<div class="expanded-details">';
+            
+            // Trip details
+            content += '<div style="margin-bottom: 15px;">';
+            if (trip.airline) content += `<strong>Airline:</strong> ${trip.airline} | `;
+            if (trip.booking) content += `<strong>Booking Type:</strong> ${trip.booking} | `;
+            if (trip.reservation_code) content += `<strong>Reservation Code:</strong> ${trip.reservation_code} | `;
+            if (trip.purchase_link) content += `<a href="${trip.purchase_link}" target="_blank">Purchase Link</a> | `;
+            content += `<strong>Created by:</strong> ${trip.created_by}`;
+            content += '</div>';
+            
+            // Traveler details
+            if (trip.travelers && trip.travelers.length > 0) {
+                content += '<h4 style="margin-bottom: 10px;">Travelers:</h4>';
+                content += '<div class="traveler-info">';
+                
+                trip.travelers.forEach(traveler => {
+                    const details = trip.traveler_details?.[traveler] || {};
+                    content += `
+                        <div class="traveler-card">
+                            <strong>${traveler}</strong><br>
+                            ${details.confirmation ? `Confirmation: ${details.confirmation}<br>` : ''}
+                            ${details.seat ? `Seat: ${details.seat}` : ''}
+                        </div>
+                    `;
+                });
+                
+                content += '</div>';
+            }
+            
+            // Notes
+            if (trip.notes) {
+                content += `<div style="margin-top: 15px;"><strong>Notes:</strong> ${trip.notes}</div>`;
+            }
+            
+            content += '</div>';
+            return content;
+        }
+
+        function toggleExpandedRow(tripId) {
+            const expandedRow = document.getElementById(`expanded-${tripId}`);
+            const expandIcon = document.getElementById(`expand-${tripId}`);
+            
+            if (expandedRow.style.display === 'none') {
+                expandedRow.style.display = 'table-row';
+                expandIcon.classList.add('expanded');
+            } else {
+                expandedRow.style.display = 'none';
+                expandIcon.classList.remove('expanded');
+            }
         }
 
         function updateStats() {
@@ -901,15 +1511,19 @@
             document.getElementById('totalTrips').textContent = trips.length;
             document.getElementById('confirmedTrips').textContent = trips.filter(t => t.status === 'CONFIRMED').length;
             document.getElementById('pendingTrips').textContent = trips.filter(t => t.status === 'PENDING').length;
-            document.getElementById('upcomingTrips').textContent = trips.filter(t => {
-                const startDate = new Date(t.start_date);
-                return startDate >= today && startDate <= thirtyDaysFromNow;
-            }).length;
+            
+            const totalCost = trips.reduce((sum, trip) => sum + (trip.cost || 0), 0);
+            document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
         }
 
-        function formatDate(dateString) {
+        function formatDateTime(dateString, timeString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            
+            if (timeString) {
+                return `${dateStr} ${timeString}`;
+            }
+            return dateStr;
         }
 
         function openAddModal() {
@@ -917,6 +1531,9 @@
             document.getElementById('modalTitle').textContent = 'Add New Trip';
             document.getElementById('tripForm').reset();
             document.getElementById('tripModal').style.display = 'flex';
+            document.getElementById('travelerDetails').style.display = 'none';
+            document.getElementById('otherTravelers').style.display = 'none';
+            document.getElementById('tripBookingTypeOther').style.display = 'none';
         }
 
         function editTrip(id) {
@@ -928,13 +1545,59 @@
             // Fill form with trip data
             document.getElementById('tripPriority').value = editingTrip.priority;
             document.getElementById('tripEvent').value = editingTrip.event;
-            document.getElementById('tripRoute').value = editingTrip.route;
+            document.getElementById('tripType').value = editingTrip.trip_type || 'Personal';
+            
+            // Parse route
+            const routeParts = editingTrip.route.split(',').map(s => s.trim());
+            document.getElementById('tripFrom').value = routeParts[0] || '';
+            document.getElementById('tripTo').value = routeParts[1] || '';
+            
             document.getElementById('tripStartDate').value = editingTrip.start_date;
+            document.getElementById('tripStartTime').value = editingTrip.start_time || '';
             document.getElementById('tripEndDate').value = editingTrip.end_date;
+            document.getElementById('tripEndTime').value = editingTrip.end_time || '';
             document.getElementById('tripStatus').value = editingTrip.status;
             document.getElementById('tripAirline').value = editingTrip.airline || '';
-            document.getElementById('tripBooking').value = editingTrip.booking || '';
+            document.getElementById('tripReservationCode').value = editingTrip.reservation_code || '';
+            document.getElementById('tripCost').value = editingTrip.cost || '';
+            document.getElementById('tripPurchaseLink').value = editingTrip.purchase_link || '';
             document.getElementById('tripNotes').value = editingTrip.notes || '';
+            
+            // Set booking type
+            if (editingTrip.booking) {
+                const bookingOptions = ['Agency', 'Direct', 'Private'];
+                if (bookingOptions.includes(editingTrip.booking)) {
+                    document.getElementById('tripBookingType').value = editingTrip.booking;
+                } else {
+                    document.getElementById('tripBookingType').value = 'Other';
+                    document.getElementById('tripBookingTypeOther').value = editingTrip.booking;
+                    document.getElementById('tripBookingTypeOther').style.display = 'block';
+                }
+            }
+            
+            // Set travelers
+            document.querySelectorAll('input[name="travelers"]').forEach(cb => cb.checked = false);
+            if (editingTrip.travelers) {
+                const standardTravelers = ['Claudia', 'Andres', 'Lucas', 'Ale', 'Cris'];
+                const otherTravelers = [];
+                
+                editingTrip.travelers.forEach(traveler => {
+                    const checkbox = document.querySelector(`input[name="travelers"][value="${traveler}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    } else if (!standardTravelers.includes(traveler)) {
+                        otherTravelers.push(traveler);
+                    }
+                });
+                
+                if (otherTravelers.length > 0) {
+                    document.querySelector('input[name="travelers"][value="Other"]').checked = true;
+                    document.getElementById('otherTravelers').value = otherTravelers.join(', ');
+                    document.getElementById('otherTravelers').style.display = 'block';
+                }
+                
+                updateTravelerDetails();
+            }
             
             document.getElementById('tripModal').style.display = 'flex';
         }
@@ -947,25 +1610,31 @@
         function resetFilters() {
             document.getElementById('filterStatus').value = '';
             document.getElementById('filterPriority').value = '';
-            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterTraveler').value = '';
+            document.getElementById('filterType').value = '';
+            setDateFilter('all');
             updateTable();
         }
 
         function exportToExcel() {
             const ws_data = [
-                ['Priority', 'Event', 'Route', 'Start Date', 'End Date', 'Status', 'Airline', 'Booking', 'Notes', 'Created By']
+                ['Priority', 'Event', 'Type', 'Route', 'Departure', 'Arrival', 'Status', 'Airline', 'Booking', 'Reservation Code', 'Cost', 'Travelers', 'Notes', 'Created By']
             ];
             
             trips.forEach(trip => {
                 ws_data.push([
                     trip.priority,
                     trip.event,
+                    trip.trip_type || '',
                     trip.route,
-                    trip.start_date,
-                    trip.end_date,
+                    formatDateTime(trip.start_date, trip.start_time),
+                    formatDateTime(trip.end_date, trip.end_time),
                     trip.status,
                     trip.airline || '',
                     trip.booking || '',
+                    trip.reservation_code || '',
+                    trip.cost || '',
+                    trip.travelers?.join(', ') || '',
                     trip.notes || '',
                     trip.created_by
                 ]);
@@ -973,9 +1642,8 @@
             
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Travel Tracker");
+            XLSX.utils.book_append_sheet(wb, ws, "CIFO Travel Tracker");
             
-            // Auto-size columns
             const max_width = ws_data.reduce((acc, row) => {
                 row.forEach((val, i) => {
                     acc[i] = Math.max(acc[i] || 10, String(val).length);
@@ -985,176 +1653,64 @@
             
             ws['!cols'] = Object.values(max_width).map(w => ({ wch: w + 2 }));
             
-            XLSX.writeFile(wb, "Travel_Tracker_2025.xlsx");
+            XLSX.writeFile(wb, "CIFO_Travel_Tracker_2025.xlsx");
         }
 
-        // Excel Import Functions
-        function handleFileDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            document.getElementById('uploadArea').classList.remove('dragover');
+        // Airport suggestions
+        function setupAirportSuggestions() {
+            const fromInput = document.getElementById('tripFrom');
+            const toInput = document.getElementById('tripTo');
+            const fromSuggestions = document.getElementById('fromSuggestions');
+            const toSuggestions = document.getElementById('toSuggestions');
             
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                processFile(files[0]);
-            }
-        }
-
-        function handleFileSelect(e) {
-            const files = e.target.files;
-            if (files.length > 0) {
-                processFile(files[0]);
-            }
-        }
-
-        async function processFile(file) {
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    showSyncStatus('saving', 'Importing Excel file...');
-                    
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                    
-                    // Parse the Excel data
-                    let importedTrips = [];
-                    for (let i = 3; i < jsonData.length; i++) {
-                        const row = jsonData[i];
-                        if (row[1]) { // If there's an event name
-                            const tripData = {
-                                priority: parsePriority(row[0]),
-                                event: row[1] || 'Imported Event',
-                                route: row[5] || row[2] || 'TBD',
-                                start_date: parseExcelDate(row[3]) || new Date().toISOString().split('T')[0],
-                                end_date: parseExcelDate(row[4]) || new Date().toISOString().split('T')[0],
-                                status: parseStatus(row[6]),
-                                airline: row[8] || null,
-                                booking: row[7] || null,
-                                notes: row[13] || null,
-                                created_by: currentUser.email,
-                                user_id: currentUser.id
-                            };
-                            importedTrips.push(tripData);
-                        }
-                    }
-                    
-                    if (importedTrips.length > 0) {
-                        // Insert all trips to database
-                        const { error } = await supabaseClient
-                            .from('trips')
-                            .insert(importedTrips);
-                            
-                        if (error) throw error;
-                        
-                        await loadTrips();
-                        showSyncStatus('saved', `Imported ${importedTrips.length} trips!`);
-                    } else {
-                        showSyncStatus('error', 'No valid trips found in Excel file');
-                    }
-                } catch (err) {
-                    console.error('Import error:', err);
-                    showSyncStatus('error', 'Error importing file');
-                    alert('Error reading file: ' + err.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function parsePriority(val) {
-            if (!val) return 'P3';
-            const str = String(val).toUpperCase();
-            if (str.includes('P1')) return 'P1';
-            if (str.includes('P2')) return 'P2';
-            if (str.includes('P3')) return 'P3';
-            if (str.includes('X')) return 'P1';
-            return 'P3';
-        }
-
-        function parseStatus(val) {
-            if (!val) return 'PENDING';
-            const str = String(val).toUpperCase();
-            if (str.includes('LISTO') || str.includes('SI') || str.includes('CONFIRMED')) return 'CONFIRMED';
-            if (str.includes('CANCEL')) return 'CANCELLED';
-            return 'PENDING';
-        }
-
-        function parseExcelDate(val) {
-            if (!val) return null;
-            if (typeof val === 'string') {
-                if (val.includes('T')) {
-                    return val.split('T')[0];
-                }
-                // Try parsing as regular date
-                const date = new Date(val);
-                if (!isNaN(date)) {
-                    return date.toISOString().split('T')[0];
-                }
-            }
-            // Handle Excel serial dates
-            if (typeof val === 'number') {
-                const date = new Date((val - 25569) * 86400 * 1000);
-                return date.toISOString().split('T')[0];
-            }
-            return null;
-        }
-
-        // Modal close on outside click
-        window.onclick = function(event) {
-            const modal = document.getElementById('tripModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Check if user is already logged in
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                currentUser = user;
-                showApp();
-            }
-
-            // Set up auth form
-            document.getElementById('authForm').addEventListener('submit', handleAuth);
-            document.getElementById('authToggleLink').addEventListener('click', toggleAuthMode);
-
-            // Set up app event listeners
-            document.getElementById('addTrip').addEventListener('click', openAddModal);
-            document.getElementById('filterStatus').addEventListener('change', updateTable);
-            document.getElementById('filterPriority').addEventListener('change', updateTable);
-            document.getElementById('filterMonth').addEventListener('input', updateTable);
-            document.getElementById('resetFilters').addEventListener('click', resetFilters);
-            document.getElementById('exportData').addEventListener('click', exportToExcel);
-
-            // File upload event listeners
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInput = document.getElementById('fileInput');
-
-            uploadArea.addEventListener('click', () => fileInput.click());
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
-            });
-            uploadArea.addEventListener('drop', handleFileDrop);
-            fileInput.addEventListener('change', handleFileSelect);
-
-            // Listen for auth state changes
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (session?.user) {
-                    currentUser = session.user;
-                    showApp();
-                } else {
-                    currentUser = null;
-                    showAuth();
+            fromInput.addEventListener('input', (e) => showAirportSuggestions(e.target.value, fromSuggestions, fromInput));
+            toInput.addEventListener('input', (e) => showAirportSuggestions(e.target.value, toSuggestions, toInput));
+            
+            // Close suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.airport-input-wrapper')) {
+                    fromSuggestions.classList.remove('show');
+                    toSuggestions.classList.remove('show');
                 }
             });
-        });
-    </script>
-</body>
-</html>
+        }
+
+        function showAirportSuggestions(value, suggestionsEl, inputEl) {
+            const searchTerm = value.toLowerCase();
+            suggestionsEl.innerHTML = '';
+            
+            if (searchTerm.length < 2) {
+                suggestionsEl.classList.remove('show');
+                return;
+            }
+            
+            let foundAirports = [];
+            
+            // Search in airports database
+            for (const [city, cityAirports] of Object.entries(airports)) {
+                if (city.includes(searchTerm)) {
+                    foundAirports.push(...cityAirports.map(airport => ({
+                        ...airport,
+                        city: city.charAt(0).toUpperCase() + city.slice(1)
+                    })));
+                }
+            }
+            
+            if (foundAirports.length > 0) {
+                foundAirports.forEach(airport => {
+                    const div = document.createElement('div');
+                    div.className = 'airport-suggestion';
+                    div.innerHTML = `
+                        <span class="airport-code">${airport.code}</span>
+                        <span class="airport-name">${airport.name}</span>
+                    `;
+                    div.addEventListener('click', () => {
+                        inputEl.value = `${airport.city} (${airport.code})`;
+                        suggestionsEl.classList.remove('show');
+                    });
+                    suggestionsEl.appendChild(div);
+                });
+                suggestionsEl.classList.add('show');
+            } else {
+                suggestionsEl.classList.remove('show');
+            }
