@@ -11,9 +11,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-    </script>
-</body>
-</html>
 
         :root {
             --cifo-orange: #FF6B35;
@@ -106,6 +103,11 @@
             background: #e55a2b;
         }
 
+        .auth-form button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
         .auth-toggle {
             text-align: center;
             margin-top: 20px;
@@ -116,6 +118,11 @@
             color: var(--cifo-orange);
             text-decoration: none;
             font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-toggle a:hover {
+            text-decoration: underline;
         }
 
         .error-message {
@@ -209,6 +216,11 @@
         }
 
         #uploadArea:hover {
+            background: #fde8df;
+            border-color: #e55a2b;
+        }
+
+        #uploadArea.dragover {
             background: #fde8df;
             border-color: #e55a2b;
         }
@@ -427,14 +439,9 @@
         }
 
         .expanded-content {
-            display: none;
             background: #fef5f1;
             padding: 20px;
             border-left: 3px solid var(--cifo-orange);
-        }
-
-        .expanded-content.show {
-            display: block;
         }
 
         .traveler-info {
@@ -768,15 +775,13 @@
         <h2 id="authTitle">Login to CIFO Travel Tracker</h2>
         <div id="authMessage"></div>
         <form id="authForm" class="auth-form">
-            <label for="authEmail" style="display: block; margin-bottom: 5px;">Email</label>
             <input type="email" id="authEmail" placeholder="Email" required>
-            <label for="authPassword" style="display: block; margin-bottom: 5px; margin-top: 10px;">Password</label>
             <input type="password" id="authPassword" placeholder="Password" required>
             <button type="submit" id="authSubmit">Login</button>
         </form>
         <div class="auth-toggle">
             <span id="authToggleText">Don't have an account?</span>
-            <a href="#" id="authToggleLink">Sign up</a>
+            <a id="authToggleLink">Sign up</a>
         </div>
     </div>
 
@@ -788,7 +793,7 @@
                 <div class="cifo-logo">CIFO</div>
                 <div class="header-right">
                     <span class="user-email">Logged in as: <strong id="userEmail"></strong></span>
-                    <button class="logout-btn" onclick="logout()">Logout</button>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
                 </div>
             </div>
 
@@ -796,8 +801,8 @@
 
             <!-- View Toggle -->
             <div class="view-toggle">
-                <button class="view-btn active" onclick="toggleView('table')">Table View</button>
-                <button class="view-btn" onclick="toggleView('calendar')">Calendar View</button>
+                <button class="view-btn active" data-view="table">Table View</button>
+                <button class="view-btn" data-view="calendar">Calendar View</button>
             </div>
 
             <!-- Excel Upload Area -->
@@ -808,11 +813,11 @@
 
             <!-- Filter Pills -->
             <div class="filter-pills">
-                <div class="filter-pill active" onclick="setDateFilter('all')">All</div>
-                <div class="filter-pill" onclick="setDateFilter('year')">Year</div>
-                <div class="filter-pill" onclick="setDateFilter('month')">Month</div>
-                <div class="filter-pill" onclick="setDateFilter('week')">Week</div>
-                <div class="filter-pill" onclick="setDateFilter('day')">Day</div>
+                <div class="filter-pill active" data-filter="all">All</div>
+                <div class="filter-pill" data-filter="year">Year</div>
+                <div class="filter-pill" data-filter="month">Month</div>
+                <div class="filter-pill" data-filter="week">Week</div>
+                <div class="filter-pill" data-filter="day">Day</div>
             </div>
 
             <div class="controls">
@@ -916,9 +921,9 @@
             <!-- Calendar View -->
             <div id="calendarView" class="calendar-view">
                 <div class="calendar-header">
-                    <button onclick="changeMonth(-1)">←</button>
+                    <button id="prevMonth">←</button>
                     <h2 id="calendarMonth"></h2>
-                    <button onclick="changeMonth(1)">→</button>
+                    <button id="nextMonth">→</button>
                 </div>
                 <div class="calendar-grid" id="calendarGrid">
                     <!-- Calendar will be populated here -->
@@ -930,7 +935,7 @@
     <!-- Modal for Adding/Editing Trips -->
     <div id="tripModal" class="modal">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
             <h2 id="modalTitle">Add New Trip</h2>
             <form id="tripForm">
                 <div class="form-row">
@@ -958,22 +963,9 @@
                     <input type="text" id="tripEvent" required>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="tripFrom">From (City or Airport)</label>
-                        <div class="airport-input-wrapper">
-                            <input type="text" id="tripFrom" placeholder="e.g., New York or JFK" required>
-                            <div class="airport-suggestions" id="fromSuggestions"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tripTo">To (City or Airport)</label>
-                        <div class="airport-input-wrapper">
-                            <input type="text" id="tripTo" placeholder="e.g., Madrid or MAD" required>
-                            <div class="airport-suggestions" id="toSuggestions"></div>
-                        </div>
-                    </div>
+                <div class="form-group full-width">
+                    <label for="tripRoute">Route (FROM, TO)</label>
+                    <input type="text" id="tripRoute" placeholder="e.g., NEW YORK, MIAMI" required>
                 </div>
                 
                 <div class="form-row">
@@ -1011,15 +1003,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="tripBookingType">Booking Type</label>
-                        <select id="tripBookingType">
-                            <option value="">Select...</option>
-                            <option value="Agency">Agency</option>
-                            <option value="Direct">Direct</option>
-                            <option value="Private">Private</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <input type="text" id="tripBookingTypeOther" placeholder="Specify other..." style="display: none; margin-top: 5px;">
+                        <label for="tripBooking">Booking Type</label>
+                        <input type="text" id="tripBooking" placeholder="e.g., Direct, Agency">
                     </div>
                 </div>
                 
@@ -1041,11 +1026,7 @@
                         <label class="traveler-checkbox">
                             <input type="checkbox" name="travelers" value="Cris"> Cris
                         </label>
-                        <label class="traveler-checkbox">
-                            <input type="checkbox" name="travelers" value="Other"> Other
-                        </label>
                     </div>
-                    <input type="text" id="otherTravelers" placeholder="Enter other travelers (comma separated)" style="display: none; margin-top: 10px;">
                 </div>
                 
                 <div class="form-row">
@@ -1077,24 +1058,24 @@
                     <textarea id="tripNotes" rows="3"></textarea>
                 </div>
                 
-                <div id="travelerDetails" style="display: none;">
-                    <h3 style="margin-top: 20px; margin-bottom: 10px; color: var(--cifo-orange);">Traveler Details</h3>
-                    <div id="travelerDetailsList"></div>
-                </div>
-                
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Save Trip</button>
-                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn-secondary" id="cancelModalBtn">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://xpdoyentcioxvotsvieu.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwZG95ZW50Y2lveHZvdHN2aWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NDY0MjIsImV4cCI6MjA2NDEyMjQyMn0.1n8c7fQ2muDRfOEHH0_6Uj0TQCqb6rHke7TiIed2m5U';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Global variables
-        let supabaseClient;
         let currentUser = null;
         let trips = [];
         let editingTrip = null;
@@ -1102,166 +1083,6 @@
         let currentView = 'table';
         let dateFilter = 'all';
         let currentMonth = new Date();
-
-        // Initialize Supabase and App
-        function initializeApp() {
-            console.log('Initializing app...');
-            
-            // Set up auth state listener
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                console.log('Auth state changed:', event, session?.user?.email);
-                
-                if (session?.user) {
-                    currentUser = session.user;
-                    showApp();
-                } else {
-                    currentUser = null;
-                    showAuth();
-                }
-            });
-
-            // Set up event listeners
-            setupEventListeners();
-            
-            // Check current session
-            checkSession();
-        }
-
-        // Check if user is already logged in
-        async function checkSession() {
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                console.log('Current session:', session?.user?.email);
-                
-                if (session?.user) {
-                    currentUser = session.user;
-                    showApp();
-                } else {
-                    showAuth();
-                }
-            } catch (error) {
-                console.error('Error checking session:', error);
-                showAuth();
-            }
-        }
-
-        // Set up all event listeners
-        function setupEventListeners() {
-            // Auth form
-            document.getElementById('authForm').addEventListener('submit', handleAuth);
-            
-            // Auth toggle link
-            document.getElementById('authToggleLink').addEventListener('click', toggleAuthMode);
-            
-            // Main app buttons
-            document.getElementById('addTrip').addEventListener('click', openAddModal);
-            document.getElementById('exportData').addEventListener('click', exportToExcel);
-            document.getElementById('resetFilters').addEventListener('click', resetFilters);
-            
-            // Filter controls
-            document.getElementById('filterStatus').addEventListener('change', updateTable);
-            document.getElementById('filterPriority').addEventListener('change', updateTable);
-            document.getElementById('filterTraveler').addEventListener('change', updateTable);
-            document.getElementById('filterType').addEventListener('change', updateTable);
-            
-            // Trip form
-            document.getElementById('tripForm').addEventListener('submit', saveTrip);
-            
-            // File upload
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInput = document.getElementById('fileInput');
-            
-            uploadArea.addEventListener('click', () => fileInput.click());
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.style.background = '#fde8df';
-            });
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.style.background = '#fef5f1';
-            });
-            uploadArea.addEventListener('drop', handleFileDrop);
-            fileInput.addEventListener('change', handleFileSelect);
-            
-            // Airport suggestions
-            setupAirportSuggestions();
-            
-            // Booking type other
-            document.getElementById('tripBookingType').addEventListener('change', (e) => {
-                const otherInput = document.getElementById('tripBookingTypeOther');
-                otherInput.style.display = e.target.value === 'Other' ? 'block' : 'none';
-            });
-            
-            // Traveler checkboxes
-            document.querySelectorAll('input[name="travelers"]').forEach(checkbox => {
-                checkbox.addEventListener('change', updateTravelerDetails);
-            });
-            
-            // Other travelers checkbox
-            document.querySelector('input[name="travelers"][value="Other"]').addEventListener('change', (e) => {
-                const otherInput = document.getElementById('otherTravelers');
-                otherInput.style.display = e.target.checked ? 'block' : 'none';
-            });
-        }
-
-        // Initialize when DOM is loaded
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing Supabase...');
-            
-            // Initialize Supabase
-            const SUPABASE_URL = 'https://xpdoyentcioxvotsvieu.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwZG95ZW50Y2lveHZvdHN2aWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NDY0MjIsImV4cCI6MjA2NDEyMjQyMn0.1n8c7fQ2muDRfOEHH0_6Uj0TQCqb6rHke7TiIed2m5U';
-            
-            // Create client
-            if (window.supabase) {
-                const { createClient } = window.supabase;
-                supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                window.supabaseClient = supabaseClient; // Make it globally accessible
-                console.log('Supabase client created successfully');
-                
-                // Initialize the app
-                initializeApp();
-            } else {
-                console.error('Supabase library failed to load!');
-                alert('Failed to load required libraries. Please refresh the page.');
-            }
-        });
-
-        // Airport data
-        const airports = {
-            'new york': [
-                { code: 'JFK', name: 'John F. Kennedy International' },
-                { code: 'LGA', name: 'LaGuardia' },
-                { code: 'EWR', name: 'Newark Liberty International' }
-            ],
-            'london': [
-                { code: 'LHR', name: 'Heathrow' },
-                { code: 'LGW', name: 'Gatwick' },
-                { code: 'STN', name: 'Stansted' },
-                { code: 'LCY', name: 'London City' },
-                { code: 'LTN', name: 'Luton' }
-            ],
-            'paris': [
-                { code: 'CDG', name: 'Charles de Gaulle' },
-                { code: 'ORY', name: 'Orly' },
-                { code: 'BVA', name: 'Beauvais' }
-            ],
-            'madrid': [
-                { code: 'MAD', name: 'Adolfo Suárez Madrid-Barajas' }
-            ],
-            'miami': [
-                { code: 'MIA', name: 'Miami International' },
-                { code: 'FLL', name: 'Fort Lauderdale-Hollywood' },
-                { code: 'PBI', name: 'Palm Beach International' }
-            ],
-            'caracas': [
-                { code: 'CCS', name: 'Simón Bolívar International' }
-            ],
-            'los angeles': [
-                { code: 'LAX', name: 'Los Angeles International' },
-                { code: 'BUR', name: 'Hollywood Burbank' },
-                { code: 'LGB', name: 'Long Beach' }
-            ]
-        };
 
         // Auth functions
         async function handleAuth(e) {
@@ -1271,7 +1092,7 @@
             const authMessage = document.getElementById('authMessage');
             const submitButton = document.getElementById('authSubmit');
 
-            // Show loading state
+            // Disable button and show loading state
             submitButton.disabled = true;
             submitButton.textContent = isSignUp ? 'Creating Account...' : 'Logging in...';
 
@@ -1292,25 +1113,12 @@
                     
                     if (result.data.user) {
                         authMessage.innerHTML = '<div class="success-message">Login successful!</div>';
-                        // User will be redirected automatically by onAuthStateChange
                     }
                 }
             } catch (error) {
                 console.error('Auth error:', error);
-                
-                // Provide more helpful error messages
-                let errorMessage = error.message;
-                if (error.message.includes('Email not confirmed')) {
-                    errorMessage = 'Please verify your email before logging in. Check your inbox for the verification link.';
-                } else if (error.message.includes('Invalid login credentials')) {
-                    errorMessage = 'Invalid email or password. Please try again.';
-                } else if (error.message.includes('User not found')) {
-                    errorMessage = 'No account found with this email. Please sign up first.';
-                }
-                
-                authMessage.innerHTML = `<div class="error-message">${errorMessage}</div>`;
+                authMessage.innerHTML = `<div class="error-message">${error.message}</div>`;
             } finally {
-                // Reset button state
                 submitButton.disabled = false;
                 submitButton.textContent = isSignUp ? 'Sign Up' : 'Login';
             }
@@ -1324,8 +1132,6 @@
             document.getElementById('authToggleText').textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
             document.getElementById('authToggleLink').textContent = isSignUp ? 'Login' : 'Sign up';
             document.getElementById('authMessage').innerHTML = '';
-            
-            // Clear form
             document.getElementById('authForm').reset();
         }
 
@@ -1336,14 +1142,12 @@
         function showApp() {
             document.getElementById('authContainer').style.display = 'none';
             document.getElementById('app').classList.add('authenticated');
-            document.getElementById('app').style.display = 'block';
             document.getElementById('userEmail').textContent = currentUser.email;
             loadTrips();
         }
 
         function showAuth() {
             document.getElementById('authContainer').style.display = 'block';
-            document.getElementById('app').style.display = 'none';
             document.getElementById('app').classList.remove('authenticated');
             trips = [];
         }
@@ -1351,8 +1155,9 @@
         // View toggle
         function toggleView(view) {
             currentView = view;
-            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
             
             if (view === 'table') {
                 document.getElementById('tableView').style.display = 'block';
@@ -1367,8 +1172,9 @@
         // Date filter
         function setDateFilter(filter) {
             dateFilter = filter;
-            document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
-            event.target.classList.add('active');
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.dataset.filter === filter);
+            });
             updateTable();
         }
 
@@ -1422,43 +1228,11 @@
             // Get travelers
             const selectedTravelers = Array.from(document.querySelectorAll('input[name="travelers"]:checked'))
                 .map(cb => cb.value);
-            
-            if (selectedTravelers.includes('Other')) {
-                const otherTravelers = document.getElementById('otherTravelers').value;
-                if (otherTravelers) {
-                    selectedTravelers.push(...otherTravelers.split(',').map(t => t.trim()));
-                }
-                selectedTravelers.splice(selectedTravelers.indexOf('Other'), 1);
-            }
-
-            // Get booking type
-            let bookingType = document.getElementById('tripBookingType').value;
-            if (bookingType === 'Other') {
-                bookingType = document.getElementById('tripBookingTypeOther').value;
-            }
-
-            // Build route
-            const fromCity = document.getElementById('tripFrom').value;
-            const toCity = document.getElementById('tripTo').value;
-            const route = `${fromCity}, ${toCity}`;
-
-            // Get traveler details
-            const travelerDetails = {};
-            selectedTravelers.forEach(traveler => {
-                const confInput = document.getElementById(`conf_${traveler}`);
-                const seatInput = document.getElementById(`seat_${traveler}`);
-                if (confInput || seatInput) {
-                    travelerDetails[traveler] = {
-                        confirmation: confInput?.value || '',
-                        seat: seatInput?.value || ''
-                    };
-                }
-            });
 
             const tripData = {
                 priority: document.getElementById('tripPriority').value,
                 event: document.getElementById('tripEvent').value,
-                route: route,
+                route: document.getElementById('tripRoute').value,
                 start_date: document.getElementById('tripStartDate').value,
                 end_date: document.getElementById('tripEndDate').value,
                 start_time: document.getElementById('tripStartTime').value || null,
@@ -1466,12 +1240,11 @@
                 status: document.getElementById('tripStatus').value,
                 trip_type: document.getElementById('tripType').value,
                 airline: document.getElementById('tripAirline').value || null,
-                booking: bookingType || null,
+                booking: document.getElementById('tripBooking').value || null,
                 reservation_code: document.getElementById('tripReservationCode').value || null,
                 cost: parseFloat(document.getElementById('tripCost').value) || null,
                 purchase_link: document.getElementById('tripPurchaseLink').value || null,
-                travelers: selectedTravelers,
-                traveler_details: travelerDetails,
+                travelers: selectedTravelers.length > 0 ? selectedTravelers : null,
                 notes: document.getElementById('tripNotes').value || null,
                 created_by: currentUser.email,
                 user_id: currentUser.id
@@ -1527,6 +1300,9 @@
             }
         }
 
+        // Make deleteTrip function global
+        window.deleteTrip = deleteTrip;
+
         // UI functions
         function updateTable() {
             const tbody = document.getElementById('tripsBody');
@@ -1575,10 +1351,10 @@
                     : travelers.join(', ');
                 
                 return `
-                    <tr class="expandable-row" onclick="toggleExpandedRow('${trip.id}')">
+                    <tr class="expandable-row">
                         <td><span class="priority-${trip.priority === 'P1' ? 'high' : trip.priority === 'P2' ? 'medium' : 'low'}">${trip.priority}</span></td>
                         <td>
-                            <span class="expand-icon" id="expand-${trip.id}">▶</span>
+                            <span class="expand-icon" data-trip-id="${trip.id}">▶</span>
                             ${trip.event}
                             ${trip.trip_type ? `<span class="trip-type">(${trip.trip_type})</span>` : ''}
                         </td>
@@ -1589,9 +1365,9 @@
                         <td>${trip.trip_type || '-'}</td>
                         <td>${trip.cost ? `$${trip.cost.toFixed(2)}` : '-'}</td>
                         <td>${travelerDisplay || '-'}</td>
-                        <td class="actions" onclick="event.stopPropagation()">
+                        <td class="actions">
                             ${canEdit ? `
-                                <button class="action-btn edit-btn" onclick="editTrip('${trip.id}')">Edit</button>
+                                <button class="action-btn edit-btn" data-trip-id="${trip.id}">Edit</button>
                                 <button class="action-btn delete-btn" onclick="deleteTrip('${trip.id}')">Delete</button>
                             ` : '<span style="color: #999;">-</span>'}
                         </td>
@@ -1621,18 +1397,15 @@
             content += `<strong>Created by:</strong> ${trip.created_by}`;
             content += '</div>';
             
-            // Traveler details
+            // Travelers
             if (trip.travelers && trip.travelers.length > 0) {
                 content += '<h4 style="margin-bottom: 10px;">Travelers:</h4>';
                 content += '<div class="traveler-info">';
                 
                 trip.travelers.forEach(traveler => {
-                    const details = trip.traveler_details?.[traveler] || {};
                     content += `
                         <div class="traveler-card">
-                            <strong>${traveler}</strong><br>
-                            ${details.confirmation ? `Confirmation: ${details.confirmation}<br>` : ''}
-                            ${details.seat ? `Seat: ${details.seat}` : ''}
+                            <strong>${traveler}</strong>
                         </div>
                     `;
                 });
@@ -1647,19 +1420,6 @@
             
             content += '</div>';
             return content;
-        }
-
-        function toggleExpandedRow(tripId) {
-            const expandedRow = document.getElementById(`expanded-${tripId}`);
-            const expandIcon = document.getElementById(`expand-${tripId}`);
-            
-            if (expandedRow.style.display === 'none') {
-                expandedRow.style.display = 'table-row';
-                expandIcon.classList.add('expanded');
-            } else {
-                expandedRow.style.display = 'none';
-                expandIcon.classList.remove('expanded');
-            }
         }
 
         function updateStats() {
@@ -1690,9 +1450,6 @@
             document.getElementById('modalTitle').textContent = 'Add New Trip';
             document.getElementById('tripForm').reset();
             document.getElementById('tripModal').style.display = 'flex';
-            document.getElementById('travelerDetails').style.display = 'none';
-            document.getElementById('otherTravelers').style.display = 'none';
-            document.getElementById('tripBookingTypeOther').style.display = 'none';
         }
 
         function editTrip(id) {
@@ -1705,57 +1462,26 @@
             document.getElementById('tripPriority').value = editingTrip.priority;
             document.getElementById('tripEvent').value = editingTrip.event;
             document.getElementById('tripType').value = editingTrip.trip_type || 'Personal';
-            
-            // Parse route
-            const routeParts = editingTrip.route.split(',').map(s => s.trim());
-            document.getElementById('tripFrom').value = routeParts[0] || '';
-            document.getElementById('tripTo').value = routeParts[1] || '';
-            
+            document.getElementById('tripRoute').value = editingTrip.route;
             document.getElementById('tripStartDate').value = editingTrip.start_date;
             document.getElementById('tripStartTime').value = editingTrip.start_time || '';
             document.getElementById('tripEndDate').value = editingTrip.end_date;
             document.getElementById('tripEndTime').value = editingTrip.end_time || '';
             document.getElementById('tripStatus').value = editingTrip.status;
             document.getElementById('tripAirline').value = editingTrip.airline || '';
+            document.getElementById('tripBooking').value = editingTrip.booking || '';
             document.getElementById('tripReservationCode').value = editingTrip.reservation_code || '';
             document.getElementById('tripCost').value = editingTrip.cost || '';
             document.getElementById('tripPurchaseLink').value = editingTrip.purchase_link || '';
             document.getElementById('tripNotes').value = editingTrip.notes || '';
             
-            // Set booking type
-            if (editingTrip.booking) {
-                const bookingOptions = ['Agency', 'Direct', 'Private'];
-                if (bookingOptions.includes(editingTrip.booking)) {
-                    document.getElementById('tripBookingType').value = editingTrip.booking;
-                } else {
-                    document.getElementById('tripBookingType').value = 'Other';
-                    document.getElementById('tripBookingTypeOther').value = editingTrip.booking;
-                    document.getElementById('tripBookingTypeOther').style.display = 'block';
-                }
-            }
-            
             // Set travelers
             document.querySelectorAll('input[name="travelers"]').forEach(cb => cb.checked = false);
             if (editingTrip.travelers) {
-                const standardTravelers = ['Claudia', 'Andres', 'Lucas', 'Ale', 'Cris'];
-                const otherTravelers = [];
-                
                 editingTrip.travelers.forEach(traveler => {
                     const checkbox = document.querySelector(`input[name="travelers"][value="${traveler}"]`);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                    } else if (!standardTravelers.includes(traveler)) {
-                        otherTravelers.push(traveler);
-                    }
+                    if (checkbox) checkbox.checked = true;
                 });
-                
-                if (otherTravelers.length > 0) {
-                    document.querySelector('input[name="travelers"][value="Other"]').checked = true;
-                    document.getElementById('otherTravelers').value = otherTravelers.join(', ');
-                    document.getElementById('otherTravelers').style.display = 'block';
-                }
-                
-                updateTravelerDetails();
             }
             
             document.getElementById('tripModal').style.display = 'flex';
@@ -1815,102 +1541,11 @@
             XLSX.writeFile(wb, "CIFO_Travel_Tracker_2025.xlsx");
         }
 
-        // Airport suggestions
-        function setupAirportSuggestions() {
-            const fromInput = document.getElementById('tripFrom');
-            const toInput = document.getElementById('tripTo');
-            const fromSuggestions = document.getElementById('fromSuggestions');
-            const toSuggestions = document.getElementById('toSuggestions');
-            
-            fromInput.addEventListener('input', (e) => showAirportSuggestions(e.target.value, fromSuggestions, fromInput));
-            toInput.addEventListener('input', (e) => showAirportSuggestions(e.target.value, toSuggestions, toInput));
-            
-            // Close suggestions when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.airport-input-wrapper')) {
-                    fromSuggestions.classList.remove('show');
-                    toSuggestions.classList.remove('show');
-                }
-            });
-        }
-
-        function showAirportSuggestions(value, suggestionsEl, inputEl) {
-            const searchTerm = value.toLowerCase();
-            suggestionsEl.innerHTML = '';
-            
-            if (searchTerm.length < 2) {
-                suggestionsEl.classList.remove('show');
-                return;
-            }
-            
-            let foundAirports = [];
-            
-            // Search in airports database
-            for (const [city, cityAirports] of Object.entries(airports)) {
-                if (city.includes(searchTerm)) {
-                    foundAirports.push(...cityAirports.map(airport => ({
-                        ...airport,
-                        city: city.charAt(0).toUpperCase() + city.slice(1)
-                    })));
-                }
-            }
-            
-            if (foundAirports.length > 0) {
-                foundAirports.forEach(airport => {
-                    const div = document.createElement('div');
-                    div.className = 'airport-suggestion';
-                    div.innerHTML = `
-                        <span class="airport-code">${airport.code}</span>
-                        <span class="airport-name">${airport.name}</span>
-                    `;
-                    div.addEventListener('click', () => {
-                        inputEl.value = `${airport.city} (${airport.code})`;
-                        suggestionsEl.classList.remove('show');
-                    });
-                    suggestionsEl.appendChild(div);
-                });
-                suggestionsEl.classList.add('show');
-            } else {
-                suggestionsEl.classList.remove('show');
-            }
-        }
-
-        // Update traveler details fields
-        function updateTravelerDetails() {
-            const selectedTravelers = Array.from(document.querySelectorAll('input[name="travelers"]:checked'))
-                .map(cb => cb.value)
-                .filter(val => val !== 'Other');
-            
-            const detailsContainer = document.getElementById('travelerDetailsList');
-            const detailsSection = document.getElementById('travelerDetails');
-            
-            if (selectedTravelers.length > 0) {
-                detailsSection.style.display = 'block';
-                detailsContainer.innerHTML = selectedTravelers.map(traveler => {
-                    const existingDetails = editingTrip?.traveler_details?.[traveler] || {};
-                    return `
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="conf_${traveler}">${traveler} - Confirmation Code</label>
-                                <input type="text" id="conf_${traveler}" value="${existingDetails.confirmation || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="seat_${traveler}">${traveler} - Seat</label>
-                                <input type="text" id="seat_${traveler}" value="${existingDetails.seat || ''}">
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                detailsSection.style.display = 'none';
-            }
-        }
-
         // File handling
         function handleFileDrop(e) {
             e.preventDefault();
             e.stopPropagation();
-            document.getElementById('uploadArea').style.background = '#fef5f1';
+            document.getElementById('uploadArea').classList.remove('dragover');
             
             const files = e.dataTransfer.files;
             if (files.length > 0 && (files[0].name.endsWith('.xlsx') || files[0].name.endsWith('.xls'))) {
@@ -1949,29 +1584,22 @@
                             travelers = row.Travelers.split(',').map(t => t.trim());
                         }
                         
-                        // Parse route
-                        let route = row.Route || '';
-                        if (row.From && row.To) {
-                            route = `${row.From}, ${row.To}`;
-                        }
-                        
                         return {
                             priority: row.Priority || 'P2',
                             event: row.Event || '',
-                            route: route,
-                            start_date: parseExcelDate(row['Departure Date'] || row['Start Date']),
-                            end_date: parseExcelDate(row['Arrival Date'] || row['End Date']),
+                            route: row.Route || '',
+                            start_date: parseExcelDate(row['Departure'] || row['Start Date']),
+                            end_date: parseExcelDate(row['Arrival'] || row['End Date']),
                             start_time: row['Departure Time'] || null,
                             end_time: row['Arrival Time'] || null,
                             status: row.Status || 'PENDING',
-                            trip_type: row['Trip Type'] || row.Type || 'Personal',
+                            trip_type: row.Type || row['Trip Type'] || 'Personal',
                             airline: row.Airline || null,
                             booking: row.Booking || row['Booking Type'] || null,
-                            reservation_code: row['Reservation Code'] || row['Confirmation'] || null,
+                            reservation_code: row['Reservation Code'] || null,
                             cost: parseFloat(row.Cost) || null,
                             purchase_link: row['Purchase Link'] || null,
-                            travelers: travelers,
-                            traveler_details: {},
+                            travelers: travelers.length > 0 ? travelers : null,
                             notes: row.Notes || null,
                             created_by: currentUser.email,
                             user_id: currentUser.id
@@ -2085,7 +1713,7 @@
                     const tripEl = document.createElement('div');
                     tripEl.className = 'calendar-trip';
                     tripEl.textContent = trip.event;
-                    tripEl.onclick = () => editTrip(trip.id);
+                    tripEl.dataset.tripId = trip.id;
                     dayCell.appendChild(tripEl);
                 });
                 
@@ -2098,10 +1726,103 @@
             renderCalendar();
         }
 
-        // Modal close on outside click
-        window.onclick = function(event) {
-            const modal = document.getElementById('tripModal');
-            if (event.target === modal) {
-                closeModal();
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is already logged in
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                currentUser = user;
+                showApp();
             }
-        }
+
+            // Set up auth form
+            document.getElementById('authForm').addEventListener('submit', handleAuth);
+            document.getElementById('authToggleLink').addEventListener('click', toggleAuthMode);
+
+            // Set up app event listeners
+            document.getElementById('addTrip').addEventListener('click', openAddModal);
+            document.getElementById('filterStatus').addEventListener('change', updateTable);
+            document.getElementById('filterPriority').addEventListener('change', updateTable);
+            document.getElementById('filterTraveler').addEventListener('change', updateTable);
+            document.getElementById('filterType').addEventListener('change', updateTable);
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            document.getElementById('exportData').addEventListener('click', exportToExcel);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('tripForm').addEventListener('submit', saveTrip);
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
+            document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
+            document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
+
+            // View toggle buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => toggleView(btn.dataset.view));
+            });
+
+            // Filter pills
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => setDateFilter(pill.dataset.filter));
+            });
+
+            // File upload event listeners
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            uploadArea.addEventListener('drop', handleFileDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Event delegation for table clicks
+            document.getElementById('tripsBody').addEventListener('click', (e) => {
+                // Handle expand icon clicks
+                if (e.target.classList.contains('expand-icon')) {
+                    const tripId = e.target.dataset.tripId;
+                    const expandedRow = document.getElementById(`expanded-${tripId}`);
+                    const isExpanded = expandedRow.style.display !== 'none';
+                    
+                    expandedRow.style.display = isExpanded ? 'none' : 'table-row';
+                    e.target.classList.toggle('expanded');
+                }
+                
+                // Handle edit button clicks
+                if (e.target.classList.contains('edit-btn')) {
+                    editTrip(e.target.dataset.tripId);
+                }
+            });
+
+            // Calendar trip clicks
+            document.getElementById('calendarGrid').addEventListener('click', (e) => {
+                if (e.target.classList.contains('calendar-trip')) {
+                    editTrip(e.target.dataset.tripId);
+                }
+            });
+
+            // Modal close on outside click
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('tripModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Listen for auth state changes
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (session?.user) {
+                    currentUser = session.user;
+                    showApp();
+                } else {
+                    currentUser = null;
+                    showAuth();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
