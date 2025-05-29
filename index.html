@@ -406,6 +406,7 @@
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
+            position: relative;
         }
 
         .modal h2 {
@@ -579,9 +580,9 @@
     <!-- Modal for Adding/Editing Trips -->
     <div id="tripModal" class="modal">
         <div class="modal-content">
-            <button class="close-modal">&times;</button>
+            <button class="close-modal" onclick="closeModal()">&times;</button>
             <h2 id="modalTitle">Add New Trip</h2>
-            <form id="tripForm">
+            <form id="tripForm" onsubmit="saveTrip(event)">
                 <div class="form-group">
                     <label for="tripPriority">Priority</label>
                     <select id="tripPriority" required>
@@ -657,41 +658,6 @@
         let trips = [];
         let editingTrip = null;
         let isSignUp = false;
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Check if user is already logged in
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                currentUser = user;
-                showApp();
-            }
-
-            // Set up auth form
-            document.getElementById('authForm').addEventListener('submit', handleAuth);
-            document.getElementById('authToggleLink').addEventListener('click', toggleAuthMode);
-
-            // Set up app event listeners
-            document.getElementById('addTrip').addEventListener('click', openAddModal);
-            document.getElementById('filterStatus').addEventListener('change', updateTable);
-            document.getElementById('filterPriority').addEventListener('change', updateTable);
-            document.getElementById('filterMonth').addEventListener('input', updateTable);
-            document.getElementById('resetFilters').addEventListener('click', resetFilters);
-            document.getElementById('exportData').addEventListener('click', exportToExcel);
-            document.getElementById('tripForm').addEventListener('submit', saveTrip);
-            document.querySelector('.close-modal').addEventListener('click', closeModal);
-
-            // Listen for auth state changes
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (session?.user) {
-                    currentUser = session.user;
-                    showApp();
-                } else {
-                    currentUser = null;
-                    showAuth();
-                }
-            });
-        });
 
         // Auth functions
         async function handleAuth(e) {
@@ -855,55 +821,50 @@
             }
         }
 
-// UI functions
-function updateTable() {
-    const tbody = document.getElementById('tripsBody');
-    const statusFilter = document.getElementById('filterStatus').value;
-    const priorityFilter = document.getElementById('filterPriority').value;
-    const monthFilter = document.getElementById('filterMonth').value;
-    
-    // Filter trips
-    let filteredTrips = trips.filter(trip => {
-        if (statusFilter && trip.status !== statusFilter) return false;
-        if (priorityFilter && trip.priority !== priorityFilter) return false;
-        if (monthFilter) {
-            const tripMonth = trip.start_date.substring(0, 7);
-            if (tripMonth !== monthFilter) return false;
+        // UI functions
+        function updateTable() {
+            const tbody = document.getElementById('tripsBody');
+            const statusFilter = document.getElementById('filterStatus').value;
+            const priorityFilter = document.getElementById('filterPriority').value;
+            const monthFilter = document.getElementById('filterMonth').value;
+            
+            // Filter trips
+            let filteredTrips = trips.filter(trip => {
+                if (statusFilter && trip.status !== statusFilter) return false;
+                if (priorityFilter && trip.priority !== priorityFilter) return false;
+                if (monthFilter) {
+                    const tripMonth = trip.start_date.substring(0, 7);
+                    if (tripMonth !== monthFilter) return false;
+                }
+                return true;
+            });
+            
+            // Render table
+            tbody.innerHTML = filteredTrips.map(trip => {
+                const canEdit = trip.user_id === currentUser?.id;
+                return `
+                    <tr>
+                        <td><span class="priority-${trip.priority === 'P1' ? 'high' : trip.priority === 'P2' ? 'medium' : 'low'}">${trip.priority}</span></td>
+                        <td>${trip.event}</td>
+                        <td class="route">${trip.route}</td>
+                        <td class="date">${formatDate(trip.start_date)}</td>
+                        <td class="date">${formatDate(trip.end_date)}</td>
+                        <td><span class="status-${trip.status.toLowerCase()}">${trip.status}</span></td>
+                        <td>${trip.airline || '-'}</td>
+                        <td>${trip.booking || '-'}</td>
+                        <td>${trip.notes || '-'}</td>
+                        <td class="created-by">${trip.created_by}</td>
+                        <td class="actions">
+                            ${canEdit ? `
+                                <button class="action-btn edit-btn" onclick="editTrip('${trip.id}')">Edit</button>
+                                <button class="action-btn delete-btn" onclick="deleteTrip('${trip.id}')">Delete</button>
+                            ` : '<span style="color: #999;">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
-        return true;
-    });
-    
-    // Render table
-    tbody.innerHTML = filteredTrips.map(trip => {
-        const canEdit = trip.user_id === currentUser?.id;
-        return `
-            <tr>
-                <td><span class="priority-${trip.priority === 'P1' ? 'high' : trip.priority === 'P2' ? 'medium' : 'low'}">${trip.priority}</span></td>
-                <td>${trip.event}</td>
-                <td class="route">${trip.route}</td>
-                <td class="date">${formatDate(trip.start_date)}</td>
-                <td class="date">${formatDate(trip.end_date)}</td>
-                <td><span class="status-${trip.status.toLowerCase()}">${trip.status}</span></td>
-                <td>${trip.airline || '-'}</td>
-                <td>${trip.booking || '-'}</td>
-                <td>${trip.notes || '-'}</td>
-                <td class="created-by">${trip.created_by}</td>
-                <td class="actions">
-                    ${canEdit ? `
-                        <button class="action-btn edit-btn" onclick="window.editTrip('${trip.id}')">Edit</button>
-                        <button class="action-btn delete-btn" onclick="window.deleteTrip('${trip.id}')">Delete</button>
-                    ` : '<span style="color: #999;">-</span>'}
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
 
-// Make functions globally accessible (add this after all function definitions)
-window.editTrip = editTrip;
-window.deleteTrip = deleteTrip;
-window.logout = logout;
-window.closeModal = closeModal;
         function updateStats() {
             const today = new Date();
             const thirtyDaysFromNow = new Date(today);
@@ -1006,6 +967,39 @@ window.closeModal = closeModal;
                 closeModal();
             }
         }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is already logged in
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                currentUser = user;
+                showApp();
+            }
+
+            // Set up auth form
+            document.getElementById('authForm').addEventListener('submit', handleAuth);
+            document.getElementById('authToggleLink').addEventListener('click', toggleAuthMode);
+
+            // Set up app event listeners
+            document.getElementById('addTrip').addEventListener('click', openAddModal);
+            document.getElementById('filterStatus').addEventListener('change', updateTable);
+            document.getElementById('filterPriority').addEventListener('change', updateTable);
+            document.getElementById('filterMonth').addEventListener('input', updateTable);
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            document.getElementById('exportData').addEventListener('click', exportToExcel);
+
+            // Listen for auth state changes
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (session?.user) {
+                    currentUser = session.user;
+                    showApp();
+                } else {
+                    currentUser = null;
+                    showAuth();
+                }
+            });
+        });
     </script>
 </body>
 </html>
