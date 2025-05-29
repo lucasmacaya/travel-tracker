@@ -1090,18 +1090,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase immediately
-        const SUPABASE_URL = 'https://xpdoyentcioxvotsvieu.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwZG95ZW50Y2lveHZvdHN2aWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NDY0MjIsImV4cCI6MjA2NDEyMjQyMn0.1n8c7fQ2muDRfOEHH0_6Uj0TQCqb6rHke7TiIed2m5U';
-        
-        let supabaseClient;
-        if (typeof window.supabase !== 'undefined') {
+        // Wait for all scripts to load
+        window.addEventListener('load', function() {
+            console.log('Page fully loaded, initializing...');
+            
+            // Initialize Supabase
+            const SUPABASE_URL = 'https://xpdoyentcioxvotsvieu.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwZG95ZW50Y2lveHZvdHN2aWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NDY0MjIsImV4cCI6MjA2NDEyMjQyMn0.1n8c7fQ2muDRfOEHH0_6Uj0TQCqb6rHke7TiIed2m5U';
+            
+            // Create client
             const { createClient } = window.supabase;
-            supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase client initialized');
-        } else {
-            console.error('Supabase library not loaded!');
-        }
+            window.supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase client created:', window.supabaseClient);
+            
+            // Initialize the app
+            initializeApp();
+        });
 
         // Global variables
         let currentUser = null;
