@@ -11,6 +11,9 @@
             padding: 0;
             box-sizing: border-box;
         }
+    </script>
+</body>
+</html>
 
         :root {
             --cifo-orange: #FF6B35;
@@ -764,7 +767,7 @@
         </div>
         <h2 id="authTitle">Login to CIFO Travel Tracker</h2>
         <div id="authMessage"></div>
-        <form id="authForm" class="auth-form" onsubmit="handleAuth(event); return false;">
+        <form id="authForm" class="auth-form">
             <label for="authEmail" style="display: block; margin-bottom: 5px;">Email</label>
             <input type="email" id="authEmail" placeholder="Email" required>
             <label for="authPassword" style="display: block; margin-bottom: 5px; margin-top: 10px;">Password</label>
@@ -929,7 +932,7 @@
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal()">&times;</button>
             <h2 id="modalTitle">Add New Trip</h2>
-            <form id="tripForm" onsubmit="saveTrip(event)">
+            <form id="tripForm">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="tripPriority">Priority</label>
@@ -1090,7 +1093,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Global variables - define everything at the top level
+        // Global variables
         let supabaseClient;
         let currentUser = null;
         let trips = [];
@@ -1100,7 +1103,107 @@
         let dateFilter = 'all';
         let currentMonth = new Date();
 
-        // Initialize Supabase when the script loads
+        // Initialize Supabase and App
+        function initializeApp() {
+            console.log('Initializing app...');
+            
+            // Set up auth state listener
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                console.log('Auth state changed:', event, session?.user?.email);
+                
+                if (session?.user) {
+                    currentUser = session.user;
+                    showApp();
+                } else {
+                    currentUser = null;
+                    showAuth();
+                }
+            });
+
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Check current session
+            checkSession();
+        }
+
+        // Check if user is already logged in
+        async function checkSession() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                console.log('Current session:', session?.user?.email);
+                
+                if (session?.user) {
+                    currentUser = session.user;
+                    showApp();
+                } else {
+                    showAuth();
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                showAuth();
+            }
+        }
+
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Auth form
+            document.getElementById('authForm').addEventListener('submit', handleAuth);
+            
+            // Auth toggle link
+            document.getElementById('authToggleLink').addEventListener('click', toggleAuthMode);
+            
+            // Main app buttons
+            document.getElementById('addTrip').addEventListener('click', openAddModal);
+            document.getElementById('exportData').addEventListener('click', exportToExcel);
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            
+            // Filter controls
+            document.getElementById('filterStatus').addEventListener('change', updateTable);
+            document.getElementById('filterPriority').addEventListener('change', updateTable);
+            document.getElementById('filterTraveler').addEventListener('change', updateTable);
+            document.getElementById('filterType').addEventListener('change', updateTable);
+            
+            // Trip form
+            document.getElementById('tripForm').addEventListener('submit', saveTrip);
+            
+            // File upload
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '#fde8df';
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.background = '#fef5f1';
+            });
+            uploadArea.addEventListener('drop', handleFileDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Airport suggestions
+            setupAirportSuggestions();
+            
+            // Booking type other
+            document.getElementById('tripBookingType').addEventListener('change', (e) => {
+                const otherInput = document.getElementById('tripBookingTypeOther');
+                otherInput.style.display = e.target.value === 'Other' ? 'block' : 'none';
+            });
+            
+            // Traveler checkboxes
+            document.querySelectorAll('input[name="travelers"]').forEach(checkbox => {
+                checkbox.addEventListener('change', updateTravelerDetails);
+            });
+            
+            // Other travelers checkbox
+            document.querySelector('input[name="travelers"][value="Other"]').addEventListener('change', (e) => {
+                const otherInput = document.getElementById('otherTravelers');
+                otherInput.style.display = e.target.checked ? 'block' : 'none';
+            });
+        }
+
+        // Initialize when DOM is loaded
         window.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, initializing Supabase...');
             
@@ -1115,11 +1218,11 @@
                 window.supabaseClient = supabaseClient; // Make it globally accessible
                 console.log('Supabase client created successfully');
                 
-                // Initialize the rest of the app
+                // Initialize the app
                 initializeApp();
             } else {
                 console.error('Supabase library failed to load!');
-                setTimeout(() => location.reload(), 2000); // Reload after 2 seconds
+                alert('Failed to load required libraries. Please refresh the page.');
             }
         });
 
@@ -1182,7 +1285,6 @@
                         authMessage.innerHTML = '<div class="error-message">This email is already registered. Please login instead.</div>';
                     } else {
                         authMessage.innerHTML = '<div class="success-message">Account created! Please check your email to verify your account.</div>';
-                        // Don't clear the form on signup
                     }
                 } else {
                     result = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -1222,6 +1324,9 @@
             document.getElementById('authToggleText').textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
             document.getElementById('authToggleLink').textContent = isSignUp ? 'Login' : 'Sign up';
             document.getElementById('authMessage').innerHTML = '';
+            
+            // Clear form
+            document.getElementById('authForm').reset();
         }
 
         async function logout() {
@@ -1231,12 +1336,14 @@
         function showApp() {
             document.getElementById('authContainer').style.display = 'none';
             document.getElementById('app').classList.add('authenticated');
+            document.getElementById('app').style.display = 'block';
             document.getElementById('userEmail').textContent = currentUser.email;
             loadTrips();
         }
 
         function showAuth() {
             document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('app').style.display = 'none';
             document.getElementById('app').classList.remove('authenticated');
             trips = [];
         }
@@ -1766,3 +1873,235 @@
             } else {
                 suggestionsEl.classList.remove('show');
             }
+        }
+
+        // Update traveler details fields
+        function updateTravelerDetails() {
+            const selectedTravelers = Array.from(document.querySelectorAll('input[name="travelers"]:checked'))
+                .map(cb => cb.value)
+                .filter(val => val !== 'Other');
+            
+            const detailsContainer = document.getElementById('travelerDetailsList');
+            const detailsSection = document.getElementById('travelerDetails');
+            
+            if (selectedTravelers.length > 0) {
+                detailsSection.style.display = 'block';
+                detailsContainer.innerHTML = selectedTravelers.map(traveler => {
+                    const existingDetails = editingTrip?.traveler_details?.[traveler] || {};
+                    return `
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="conf_${traveler}">${traveler} - Confirmation Code</label>
+                                <input type="text" id="conf_${traveler}" value="${existingDetails.confirmation || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="seat_${traveler}">${traveler} - Seat</label>
+                                <input type="text" id="seat_${traveler}" value="${existingDetails.seat || ''}">
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                detailsSection.style.display = 'none';
+            }
+        }
+
+        // File handling
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').style.background = '#fef5f1';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && (files[0].name.endsWith('.xlsx') || files[0].name.endsWith('.xls'))) {
+                processExcelFile(files[0]);
+            } else {
+                alert('Please upload a valid Excel file (.xlsx or .xls)');
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processExcelFile(file);
+            }
+        }
+
+        function processExcelFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    if (jsonData.length === 0) {
+                        alert('The Excel file appears to be empty.');
+                        return;
+                    }
+                    
+                    const importedTrips = jsonData.map(row => {
+                        // Parse travelers
+                        let travelers = [];
+                        if (row.Travelers) {
+                            travelers = row.Travelers.split(',').map(t => t.trim());
+                        }
+                        
+                        // Parse route
+                        let route = row.Route || '';
+                        if (row.From && row.To) {
+                            route = `${row.From}, ${row.To}`;
+                        }
+                        
+                        return {
+                            priority: row.Priority || 'P2',
+                            event: row.Event || '',
+                            route: route,
+                            start_date: parseExcelDate(row['Departure Date'] || row['Start Date']),
+                            end_date: parseExcelDate(row['Arrival Date'] || row['End Date']),
+                            start_time: row['Departure Time'] || null,
+                            end_time: row['Arrival Time'] || null,
+                            status: row.Status || 'PENDING',
+                            trip_type: row['Trip Type'] || row.Type || 'Personal',
+                            airline: row.Airline || null,
+                            booking: row.Booking || row['Booking Type'] || null,
+                            reservation_code: row['Reservation Code'] || row['Confirmation'] || null,
+                            cost: parseFloat(row.Cost) || null,
+                            purchase_link: row['Purchase Link'] || null,
+                            travelers: travelers,
+                            traveler_details: {},
+                            notes: row.Notes || null,
+                            created_by: currentUser.email,
+                            user_id: currentUser.id
+                        };
+                    });
+                    
+                    if (confirm(`Import ${importedTrips.length} trips from Excel file?`)) {
+                        showSyncStatus('saving', `Importing ${importedTrips.length} trips...`);
+                        
+                        const { error } = await supabaseClient
+                            .from('trips')
+                            .insert(importedTrips);
+                        
+                        if (error) throw error;
+                        
+                        await loadTrips();
+                        showSyncStatus('saved', `${importedTrips.length} trips imported successfully!`);
+                    }
+                } catch (error) {
+                    console.error('Error processing Excel file:', error);
+                    alert('Error processing Excel file. Please ensure it has the correct format.');
+                    showSyncStatus('error', 'Failed to import trips');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseExcelDate(dateValue) {
+            if (!dateValue) return null;
+            
+            // If it's already a string date
+            if (typeof dateValue === 'string') {
+                const date = new Date(dateValue);
+                if (!isNaN(date)) {
+                    return date.toISOString().split('T')[0];
+                }
+            }
+            
+            // If it's an Excel serial date
+            if (typeof dateValue === 'number') {
+                const date = new Date((dateValue - 25569) * 86400 * 1000);
+                return date.toISOString().split('T')[0];
+            }
+            
+            return null;
+        }
+
+        // Calendar view functions
+        function renderCalendar() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            
+            // Update month header
+            document.getElementById('calendarMonth').textContent = 
+                currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Get trips for this month
+            const monthTrips = trips.filter(trip => {
+                const tripStart = new Date(trip.start_date);
+                const tripEnd = new Date(trip.end_date);
+                return (tripStart.getMonth() === month && tripStart.getFullYear() === year) ||
+                       (tripEnd.getMonth() === month && tripEnd.getFullYear() === year);
+            });
+            
+            // Create calendar grid
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Add day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.style.fontWeight = 'bold';
+                header.style.textAlign = 'center';
+                header.style.padding = '10px';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Add empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+            
+            // Add days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'calendar-day-number';
+                dayNumber.textContent = day;
+                dayCell.appendChild(dayNumber);
+                
+                // Find trips for this day
+                const dayTrips = monthTrips.filter(trip => {
+                    const tripStart = new Date(trip.start_date);
+                    const tripEnd = new Date(trip.end_date);
+                    const currentDate = new Date(year, month, day);
+                    
+                    return currentDate >= tripStart && currentDate <= tripEnd;
+                });
+                
+                // Add trips to day
+                dayTrips.forEach(trip => {
+                    const tripEl = document.createElement('div');
+                    tripEl.className = 'calendar-trip';
+                    tripEl.textContent = trip.event;
+                    tripEl.onclick = () => editTrip(trip.id);
+                    dayCell.appendChild(tripEl);
+                });
+                
+                grid.appendChild(dayCell);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentMonth.setMonth(currentMonth.getMonth() + direction);
+            renderCalendar();
+        }
+
+        // Modal close on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('tripModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
