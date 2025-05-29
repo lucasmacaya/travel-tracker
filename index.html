@@ -1351,7 +1351,7 @@
                     : travelers.join(', ');
                 
                 return `
-                    <tr class="expandable-row">
+                    <tr class="expandable-row" data-trip-id="${trip.id}">
                         <td><span class="priority-${trip.priority === 'P1' ? 'high' : trip.priority === 'P2' ? 'medium' : 'low'}">${trip.priority}</span></td>
                         <td>
                             <span class="expand-icon" data-trip-id="${trip.id}">▶</span>
@@ -1363,7 +1363,7 @@
                         <td class="date">${formatDateTime(trip.end_date, trip.end_time)}</td>
                         <td><span class="status-${trip.status.toLowerCase()}">${trip.status}</span></td>
                         <td>${trip.trip_type || '-'}</td>
-                        <td>${trip.cost ? `$${trip.cost.toFixed(2)}` : '-'}</td>
+                        <td>${trip.cost ? `${trip.cost.toFixed(2)}` : '-'}</td>
                         <td>${travelerDisplay || '-'}</td>
                         <td class="actions">
                             ${canEdit ? `
@@ -1390,16 +1390,19 @@
             
             // Trip details
             content += '<div style="margin-bottom: 15px;">';
-            if (trip.airline) content += `<strong>Airline:</strong> ${trip.airline} | `;
-            if (trip.booking) content += `<strong>Booking Type:</strong> ${trip.booking} | `;
-            if (trip.reservation_code) content += `<strong>Reservation Code:</strong> ${trip.reservation_code} | `;
+            content += '<strong>Trip Details:</strong><br>';
+            if (trip.airline) content += `Airline: ${trip.airline} | `;
+            if (trip.booking) content += `Booking Type: ${trip.booking} | `;
+            if (trip.reservation_code) content += `Reservation Code: ${trip.reservation_code} | `;
+            if (trip.cost) content += `Cost: ${trip.cost.toFixed(2)} | `;
             if (trip.purchase_link) content += `<a href="${trip.purchase_link}" target="_blank">Purchase Link</a> | `;
-            content += `<strong>Created by:</strong> ${trip.created_by}`;
+            content += `<br>Created by: ${trip.created_by}`;
             content += '</div>';
             
             // Travelers
             if (trip.travelers && trip.travelers.length > 0) {
-                content += '<h4 style="margin-bottom: 10px;">Travelers:</h4>';
+                content += '<div style="margin-bottom: 15px;">';
+                content += '<strong>Travelers:</strong><br>';
                 content += '<div class="traveler-info">';
                 
                 trip.travelers.forEach(traveler => {
@@ -1410,12 +1413,21 @@
                     `;
                 });
                 
+                content += '</div></div>';
+            }
+            
+            // Time details
+            if (trip.start_time || trip.end_time) {
+                content += '<div style="margin-bottom: 15px;">';
+                content += '<strong>Time Details:</strong><br>';
+                if (trip.start_time) content += `Departure Time: ${trip.start_time} | `;
+                if (trip.end_time) content += `Arrival Time: ${trip.end_time}`;
                 content += '</div>';
             }
             
             // Notes
             if (trip.notes) {
-                content += `<div style="margin-top: 15px;"><strong>Notes:</strong> ${trip.notes}</div>`;
+                content += `<div style="margin-top: 15px;"><strong>Notes:</strong><br>${trip.notes}</div>`;
             }
             
             content += '</div>';
@@ -1781,18 +1793,23 @@
 
             // Event delegation for table clicks
             document.getElementById('tripsBody').addEventListener('click', (e) => {
-                // Handle expand icon clicks
-                if (e.target.classList.contains('expand-icon')) {
-                    const tripId = e.target.dataset.tripId;
+                // Handle row clicks for expansion (but not on buttons)
+                const expandableRow = e.target.closest('.expandable-row');
+                if (expandableRow && !e.target.closest('.actions') && !e.target.closest('a')) {
+                    const tripId = expandableRow.dataset.tripId;
                     const expandedRow = document.getElementById(`expanded-${tripId}`);
-                    const isExpanded = expandedRow.style.display !== 'none';
+                    const expandIcon = expandableRow.querySelector('.expand-icon');
                     
-                    expandedRow.style.display = isExpanded ? 'none' : 'table-row';
-                    e.target.classList.toggle('expanded');
+                    if (expandedRow) {
+                        const isExpanded = expandedRow.style.display !== 'none';
+                        expandedRow.style.display = isExpanded ? 'none' : 'table-row';
+                        expandIcon.classList.toggle('expanded');
+                    }
                 }
                 
                 // Handle edit button clicks
                 if (e.target.classList.contains('edit-btn')) {
+                    e.stopPropagation();
                     editTrip(e.target.dataset.tripId);
                 }
             });
