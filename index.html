@@ -419,29 +419,21 @@
             background: #f8f9fa;
         }
 
-        /* Expandable Row */
+        /* Remove expandable row styles */
+        .expand-icon {
+            display: none;
+        }
+
         .expandable-row {
-            cursor: pointer;
+            cursor: default;
         }
 
         .expandable-row:hover {
-            background: #fef5f1;
-        }
-
-        .expand-icon {
-            transition: transform 0.3s;
-            display: inline-block;
-            margin-right: 5px;
-        }
-
-        .expand-icon.expanded {
-            transform: rotate(90deg);
+            background: #f8f9fa;
         }
 
         .expanded-content {
-            background: #fef5f1;
-            padding: 20px;
-            border-left: 3px solid var(--cifo-orange);
+            display: none;
         }
 
         .traveler-info {
