@@ -765,7 +765,9 @@
         <h2 id="authTitle">Login to CIFO Travel Tracker</h2>
         <div id="authMessage"></div>
         <form id="authForm" class="auth-form" onsubmit="handleAuth(event); return false;">
+            <label for="authEmail" style="display: block; margin-bottom: 5px;">Email</label>
             <input type="email" id="authEmail" placeholder="Email" required>
+            <label for="authPassword" style="display: block; margin-bottom: 5px; margin-top: 10px;">Password</label>
             <input type="password" id="authPassword" placeholder="Password" required>
             <button type="submit" id="authSubmit">Login</button>
         </form>
