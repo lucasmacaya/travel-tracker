@@ -1090,24 +1090,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Wait for all scripts to load
-        window.addEventListener('load', function() {
-            console.log('Page fully loaded, initializing...');
-            
-            // Initialize Supabase
-            const SUPABASE_URL = 'https://xpdoyentcioxvotsvieu.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwZG95ZW50Y2lveHZvdHN2aWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NDY0MjIsImV4cCI6MjA2NDEyMjQyMn0.1n8c7fQ2muDRfOEHH0_6Uj0TQCqb6rHke7TiIed2m5U';
-            
-            // Create client
-            const { createClient } = window.supabase;
-            window.supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase client created:', window.supabaseClient);
-            
-            // Initialize the app
-            initializeApp();
-        });
-
-        // Global variables
+        // Global variables - define everything at the top level
+        let supabaseClient;
         let currentUser = null;
         let trips = [];
         let editingTrip = null;
@@ -1115,6 +1099,29 @@
         let currentView = 'table';
         let dateFilter = 'all';
         let currentMonth = new Date();
+
+        // Initialize Supabase when the script loads
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing Supabase...');
+            
+            // Initialize Supabase
+            const SUPABASE_URL = 'https://xpdoyentcioxvotsvieu.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwZG95ZW50Y2lveHZvdHN2aWV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NDY0MjIsImV4cCI6MjA2NDEyMjQyMn0.1n8c7fQ2muDRfOEHH0_6Uj0TQCqb6rHke7TiIed2m5U';
+            
+            // Create client
+            if (window.supabase) {
+                const { createClient } = window.supabase;
+                supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                window.supabaseClient = supabaseClient; // Make it globally accessible
+                console.log('Supabase client created successfully');
+                
+                // Initialize the rest of the app
+                initializeApp();
+            } else {
+                console.error('Supabase library failed to load!');
+                setTimeout(() => location.reload(), 2000); // Reload after 2 seconds
+            }
+        });
 
         // Airport data
         const airports = {
