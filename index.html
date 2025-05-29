@@ -1498,6 +1498,9 @@
             
             document.getElementById('tripModal').style.display = 'flex';
         }
+        
+        // Make editTrip global
+        window.editTrip = editTrip;
 
         function closeModal() {
             document.getElementById('tripModal').style.display = 'none';
@@ -1790,29 +1793,6 @@
             });
             uploadArea.addEventListener('drop', handleFileDrop);
             fileInput.addEventListener('change', handleFileSelect);
-
-            // Event delegation for table clicks
-            document.getElementById('tripsBody').addEventListener('click', (e) => {
-                // Handle row clicks for expansion (but not on buttons)
-                const expandableRow = e.target.closest('.expandable-row');
-                if (expandableRow && !e.target.closest('.actions') && !e.target.closest('a')) {
-                    const tripId = expandableRow.dataset.tripId;
-                    const expandedRow = document.getElementById(`expanded-${tripId}`);
-                    const expandIcon = expandableRow.querySelector('.expand-icon');
-                    
-                    if (expandedRow) {
-                        const isExpanded = expandedRow.style.display !== 'none';
-                        expandedRow.style.display = isExpanded ? 'none' : 'table-row';
-                        expandIcon.classList.toggle('expanded');
-                    }
-                }
-                
-                // Handle edit button clicks
-                if (e.target.classList.contains('edit-btn')) {
-                    e.stopPropagation();
-                    editTrip(e.target.dataset.tripId);
-                }
-            });
 
             // Calendar trip clicks
             document.getElementById('calendarGrid').addEventListener('click', (e) => {
